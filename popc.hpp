@@ -2,4 +2,6 @@
 
 namespace popc{
   Process *self();
+
+  void start_process(Process *pr);
 }

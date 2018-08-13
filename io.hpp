@@ -24,7 +24,7 @@ namespace popc::IO{
   };
 
 
-  static File stdin("stdin", 0);
-  static File stdout("stdout", 1);
-  static File stderr("stderr", 2);
+  extern File stdin;
+  extern File stdout;
+  extern File stderr;
 };

@@ -1,10 +1,15 @@
 #include <thread>
 #include "process.hpp"
+#include "vm.hpp"
 
 namespace popc{
-  thread_local Process *_self = nullptr;
+  static VM vm;
 
   Process *self(){
-    return _self;
+    return vm.self();
+  }
+
+  void start_process(Process *pr){
+    vm.start_process(pr);
   }
 }

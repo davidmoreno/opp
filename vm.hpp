@@ -1,11 +1,15 @@
+#include <thread>
 
-class VM{
-  std::vector<std::thread> threads;
-public:
-  void loop();
-  void loop_thread();
-};
+namespace popc{
+  class Process;
 
-void VM::loop(){
+  class VM{
+    std::vector<std::thread> threads;
+  public:
+    void loop();
+    void loop_thread();
 
+    Process *self();
+    void start_process(Process *pr);
+  };
 }
