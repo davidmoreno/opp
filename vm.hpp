@@ -1,3 +1,5 @@
+#pragma once
+
 #include <thread>
 
 namespace popc{
@@ -6,6 +8,7 @@ namespace popc{
   class VM{
     std::vector<std::thread> threads;
   public:
+    VM();
     void loop();
     void loop_thread();
 

@@ -1,9 +1,11 @@
 #include <iostream>
 #include <unistd.h>
 #include "io.hpp"
+#include "popc.hpp"
 
 namespace popc::IO{
   static popc::Symbol PRINT("print");
+  static popc::Symbol PRINTLN("println");
   static popc::Symbol READLINE("readline");
   static popc::Symbol READLINE_RESULT("readline_result");
 
@@ -30,6 +32,23 @@ namespace popc::IO{
           throw write_error();
         }
       }},
+      {PRINTLN, [this](const std::any &args){
+        printf("Resolved print %s %d\n", filename.c_str(), fd);
+        auto str = std::any_cast<std::string>(args);
+        auto wrote = write(this->fd, str.c_str(), str.size());
+        if (wrote != signed(str.size())){
+          throw write_error();
+        }
+        wrote = write(this->fd, "\n", 1);
+        if (wrote != 1){
+          throw write_error();
+        }
+      }},
+      {READLINE, [this](const std::any &args){
+        auto from = std::any_cast<Process*>(args);
+        printf("%s: Answer for %s\n", name().c_str(), from->name().c_str());
+        from->send(READLINE_RESULT, "{}");
+      }}
     };
 
     while(true){ // This will exit because of an exception when closed
@@ -41,8 +60,12 @@ namespace popc::IO{
     send(PRINT, str);
   }
 
+  void File::println(const std::string &str){
+    send(PRINTLN, str);
+  }
+
   std::string File::readline(){
-    send(READLINE, {this});
-    return std::any_cast<std::string>(receive(READLINE_RESULT));
+    send(READLINE, {popc::self()});
+    return std::any_cast<std::string>(popc::self()->receive(READLINE_RESULT));
   }
 }

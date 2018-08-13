@@ -20,21 +20,25 @@ namespace popc{
     std::vector<std::pair<Symbol, std::any>> messages;
     std::mutex mtx;
     std::condition_variable newmessage;
-    std::string name;
+    std::string _name;
   public:
     bool running = false;
 
     Process();
     Process(std::string &&name);
+    Process(const Process &) = delete;
     virtual ~Process();
 
+    const std::string &name(){ return _name; };
+
     // First function to be called. Can not be on constructor as it runs on the callers context.
-    virtual void process() = 0;
+    virtual void process(){
+      printf("%s: Please reimplement. EXIT now.\n", _name.c_str());
+    };
 
     // Sends a message to this process
     void send(const Symbol &, std::any &&msg);
 
-  protected:
     // FIXME. This is the lazy wait. On all send wil lcheck the full queue.
     // The nice way would be on each receive first check the message queue, and
     // then wait for my message.

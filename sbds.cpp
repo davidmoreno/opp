@@ -6,4 +6,6 @@ int main(int argc, char **argv){
   });
 
   Serverboards::loop();
+
+  printf("EXIT!! end!!\n");
 }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "process.hpp"
 
 namespace popc::IO{
@@ -14,11 +16,12 @@ namespace popc::IO{
     File(std::string &&filename, int fd);
     File(std::string &&filename);
     ~File();
-    void process();
+    virtual void process();
 
 
     // out funcs
     void print(const std::string &);
+    void println(const std::string &);
     // in funcs
     std::string readline();
   };

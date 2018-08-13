@@ -16,11 +16,12 @@ namespace Serverboards{
   }
 
   void process_request(json &&req){
-    popc::IO::stderr.print("parse");
+    popc::IO::stderr.println("parse");
   }
 
   void loop(){
-    popc::IO::stderr.print("LOOP");
+    popc::IO::stderr.println("LOOP");
+    data.running=true;
     while (data.running){
       auto line = popc::IO::stdin.readline();
       auto req = json::parse(line);
