@@ -15,7 +15,7 @@ namespace popc{
   public:
     MainProcess() : Process("main"){};
     void process(){
-      while(running){
+      while(running()){
         sleep(1000);
       }
     }
@@ -42,11 +42,11 @@ namespace popc{
         printf("%s: Start\n", pr->name().c_str());
         pr->process();
         printf("%s: End\n", pr->name().c_str());
-      } catch (const std::exception &e){
+      } catch (std::exception &e){
         printf("%s: EXIT exception %s", pr->name().c_str(), e.what());
+      } catch (...) {
+        printf("%s: unkwnon exception", pr->name().c_str());
       }
     })));
   }
-
-
 }

@@ -22,10 +22,18 @@ namespace Serverboards{
   void loop(){
     popc::IO::stderr.println("LOOP");
     data.running=true;
-    while (data.running){
-      auto line = popc::IO::stdin.readline();
-      auto req = json::parse(line);
-      process_request(std::move(req));
-    };
+    try{
+      while (data.running){
+        auto line = popc::IO::stdin.readline();
+        auto req = json::parse(line);
+        process_request(std::move(req));
+
+
+        popc::IO::stderr.println("Debug STOP");
+        data.running=false; // To stop on debug
+      };
+    } catch (std::exception &e){
+      printf("Exception exit: %s\n", e.what());
+    }
   }
 }

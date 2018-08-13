@@ -11,18 +11,38 @@
 #include <condition_variable>
 #include <functional>
 #include "symbol.hpp"
+#include "popc.hpp"
 
-namespace popc{
+namespace popc {
   extern Symbol EXIT;
   extern Symbol TIMEOUT;
 
-  class Process{
+  class bad_receiver : public popc::exception {
+    const char *what() const noexcept{
+      return "Receive on wrong process. Only currently executing process can call receive.";
+    }
+  };
+
+  class process_timeout : public popc::exception {
+    const char *what() const noexcept{
+      return "Timeout.";
+    }
+  };
+
+  class process_exit : public popc::exception {
+    const char *what() const noexcept{
+      return "Exit.";
+    }
+  };
+
+
+  class Process {
     std::vector<std::pair<Symbol, std::any>> messages;
     std::mutex mtx;
     std::condition_variable newmessage;
     std::string _name;
+    bool _running = false;
   public:
-    bool running = false;
 
     Process();
     Process(std::string &&name);
@@ -32,12 +52,12 @@ namespace popc{
     const std::string &name(){ return _name; };
 
     // First function to be called. Can not be on constructor as it runs on the callers context.
-    virtual void process(){
-      printf("%s: Please reimplement. EXIT now.\n", _name.c_str());
-    };
+    virtual void process() = 0;
 
     // Sends a message to this process
     void send(const Symbol &, std::any &&msg);
+    void exit();
+    bool running(){ return _running; }
 
     // FIXME. This is the lazy wait. On all send wil lcheck the full queue.
     // The nice way would be on each receive first check the message queue, and

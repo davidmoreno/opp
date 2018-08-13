@@ -21,11 +21,11 @@ namespace popc::IO{
   }
 
   void File::process(){
-    printf("Process file %s %d\n", filename.c_str(), fd);
+    // printf("Process file %s %d\n", filename.c_str(), fd);
     // Build once, use man times
     std::map<Symbol, std::function<void(const std::any &)>> _case = {
       {PRINT, [this](const std::any &args){
-        printf("Resolved print %s %d\n", filename.c_str(), fd);
+        // printf("Resolved print %s %d\n", filename.c_str(), fd);
         auto str = std::any_cast<std::string>(args);
         auto wrote = write(this->fd, str.c_str(), str.size());
         if ((wrote < 0) || (unsigned(wrote) < str.size())){
@@ -33,7 +33,7 @@ namespace popc::IO{
         }
       }},
       {PRINTLN, [this](const std::any &args){
-        printf("Resolved print %s %d\n", filename.c_str(), fd);
+        // printf("Resolved print %s %d\n", filename.c_str(), fd);
         auto str = std::any_cast<std::string>(args);
         auto wrote = write(this->fd, str.c_str(), str.size());
         if (wrote != signed(str.size())){
@@ -47,7 +47,7 @@ namespace popc::IO{
       {READLINE, [this](const std::any &args){
         auto from = std::any_cast<Process*>(args);
         printf("%s: Answer for %s\n", name().c_str(), from->name().c_str());
-        from->send(READLINE_RESULT, "{}");
+        from->send(READLINE_RESULT, std::string("{}"));
       }}
     };
 
@@ -66,6 +66,10 @@ namespace popc::IO{
 
   std::string File::readline(){
     send(READLINE, {popc::self()});
-    return std::any_cast<std::string>(popc::self()->receive(READLINE_RESULT));
+    auto res = popc::self()->receive(READLINE_RESULT);
+    std::string str = std::any_cast<std::string>(res);
+    println("Got something.");
+    println(str);
+    return str;
   }
 }
