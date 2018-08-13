@@ -1,9 +1,9 @@
 all: sbds
 
 CC=g++
-CXXFLAGS="-std=gnu++17"
+CXXFLAGS=-std=gnu++17 -O2 -Wall -Werror
 
-sbds: sbds.o serverboards.o spc.o symbol.o process.o io.o
+sbds: sbds.o serverboards.o popc.o symbol.o process.o io.o
 
 
 test: sbds

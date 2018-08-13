@@ -1,5 +1,5 @@
 
-namespace SPC{
+namespace popc{
   class Symbol{
     int id;
   public:

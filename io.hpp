@@ -1,7 +1,13 @@
 #include "process.hpp"
 
-namespace SPC::IO{
-  class File : SPC::Process{
+namespace popc::IO{
+  class write_error : public std::exception{
+    virtual const char* what() const throw(){
+      return "write error";
+    }
+  };
+
+  class File : popc::Process{
     std::string filename;
     int fd;
   public:

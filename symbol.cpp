@@ -3,6 +3,6 @@
 // Just a counter
 static int symbol_id = 1;
 
-SPC::Symbol::Symbol(){
+popc::Symbol::Symbol(){
   id = symbol_id++;
 }

@@ -10,7 +10,10 @@
 #include <functional>
 #include "symbol.hpp"
 
-namespace SPC{
+namespace popc{
+  extern Symbol EXIT;
+  extern Symbol TIMEOUT;
+
   class Process{
     std::vector<std::pair<Symbol, std::any>> messages;
   public:

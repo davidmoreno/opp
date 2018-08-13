@@ -1,13 +1,12 @@
 #include <unistd.h>
 #include "io.hpp"
 
-namespace SPC::IO{
-  static SPC::Symbol PRINT;
-  static SPC::Symbol READLINE;
-  static SPC::Symbol READLINE_RESULT;
+namespace popc::IO{
+  static popc::Symbol PRINT;
+  static popc::Symbol READLINE;
+  static popc::Symbol READLINE_RESULT;
 
-
-  File::File(std::string &&name, int fd) : filename(filename), fd(fd){
+  File::File(std::string &&name, int fd) : filename(name), fd(fd){
   }
 
   File::~File(){
@@ -19,7 +18,10 @@ namespace SPC::IO{
     std::map<Symbol, std::function<void(const std::any &)>> _case = {
       {PRINT, [this](const std::any &args){
         auto str = std::any_cast<std::string>(args);
-        write(this->fd, str.c_str(), str.size());
+        auto wrote = write(this->fd, str.c_str(), str.size());
+        if ((wrote < 0) || (unsigned(wrote) < str.size())){
+          throw write_error();
+        }
       }},
     };
 
