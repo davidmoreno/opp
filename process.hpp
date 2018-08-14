@@ -17,31 +17,12 @@ namespace popc {
   extern Symbol EXIT;
   extern Symbol TIMEOUT;
 
-  class bad_receiver : public popc::exception {
-    const char *what() const noexcept{
-      return "Receive on wrong process. Only currently executing process can call receive.";
-    }
-  };
-
-  class process_timeout : public popc::exception {
-    const char *what() const noexcept{
-      return "Timeout.";
-    }
-  };
-
-  class process_exit : public popc::exception {
-    const char *what() const noexcept{
-      return "Exit.";
-    }
-  };
-
-
-  class Process {
+  class Process{
     std::vector<std::pair<Symbol, std::any>> messages;
     std::mutex mtx;
     std::condition_variable newmessage;
     std::string _name;
-    bool _running = false;
+    bool _running;
   public:
 
     Process();
@@ -52,7 +33,9 @@ namespace popc {
     const std::string &name(){ return _name; };
 
     // First function to be called. Can not be on constructor as it runs on the callers context.
-    virtual void process() = 0;
+    virtual void process(){
+      throw popc::not_implemented();
+    };
 
     // Sends a message to this process
     void send(const Symbol &, std::any &&msg);

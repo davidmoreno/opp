@@ -16,20 +16,20 @@ namespace Serverboards{
   }
 
   void process_request(json &&req){
-    popc::IO::stderr.println("parse");
+    popc::IO::stderr->println("parse");
   }
 
   void loop(){
-    popc::IO::stderr.println("LOOP");
+    popc::IO::stderr->println("LOOP");
     data.running=true;
     try{
       while (data.running){
-        auto line = popc::IO::stdin.readline();
+        auto line = popc::IO::stdin->readline();
         auto req = json::parse(line);
         process_request(std::move(req));
 
 
-        popc::IO::stderr.println("Debug STOP");
+        popc::IO::stderr->println("Debug STOP");
         data.running=false; // To stop on debug
       };
     } catch (std::exception &e){

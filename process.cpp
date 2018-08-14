@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 #include "process.hpp"
 #include "popc.hpp"
 
@@ -8,19 +9,24 @@ namespace popc{
 
   Process::Process() : _name("noname"){
     // printf("%s: New process %p\n", _name.c_str(), this);
+    _running=true;
     popc::start_process(this);
   }
   Process::Process(std::string &&name) : _name(name){
     // printf("%s: New process %p\n", _name.c_str(), this);
+    _running=true;
     popc::start_process(this);
   }
 
   Process::~Process(){
     printf("%s: ~Process %p\n", _name.c_str(), this);
+    popc::stop_process(this);
     exit();
   }
 
   void Process::send(const Symbol &s, std::any &&msg){
+    if (!running())
+      throw popc::process_exit();
     // printf("%s: Send %s\n", name().c_str(), s.name());
     std::unique_lock<std::mutex> lck(mtx);
     messages.push_back(std::make_pair(s, msg));

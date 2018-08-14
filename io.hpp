@@ -3,7 +3,7 @@
 #include "process.hpp"
 
 namespace popc::IO{
-  class write_error : public std::exception{
+  class write_error : public popc::exception{
     virtual const char* what() const throw(){
       return "write error";
     }
@@ -27,7 +27,7 @@ namespace popc::IO{
   };
 
 
-  extern File stdin;
-  extern File stdout;
-  extern File stderr;
+  extern File *stdin;
+  extern File *stdout;
+  extern File *stderr;
 };

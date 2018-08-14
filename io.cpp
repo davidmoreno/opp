@@ -9,9 +9,9 @@ namespace popc::IO{
   static popc::Symbol READLINE("readline");
   static popc::Symbol READLINE_RESULT("readline_result");
 
-  File stdin("stdin", 0);
-  File stdout("stdout", 1);
-  File stderr("stderr", 2);
+  File *stdin = nullptr;
+  File *stdout = nullptr;
+  File *stderr = nullptr;
 
   File::File(std::string &&name, int fd) : Process(std::string(name)), filename(name), fd(fd){
   }
@@ -68,8 +68,7 @@ namespace popc::IO{
     send(READLINE, {popc::self()});
     auto res = popc::self()->receive(READLINE_RESULT);
     std::string str = std::any_cast<std::string>(res);
-    println("Got something.");
-    println(str);
+    println(std::string("Got something. ") + str);
     return str;
   }
 }

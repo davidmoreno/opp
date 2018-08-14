@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "vm.hpp"
 #include "process.hpp"
+#include "io.hpp"
 
 namespace popc{
   /**
@@ -14,17 +15,38 @@ namespace popc{
   class MainProcess : public Process{
   public:
     MainProcess() : Process("main"){};
-    void process(){
+    virtual void process(){
       while(running()){
         sleep(1000);
       }
     }
   };
 
+
+  VM *vm = nullptr;
   static thread_local Process *_self=nullptr;
 
   VM::VM(){
+    if (vm){
+      throw popc::already_initialized();
+    }
+    vm = this;
+
+    // Start some required classes
+    popc::IO::stdin = new IO::File("stdin", 0);
+    popc::IO::stdout = new IO::File("stdout", 1);
+    popc::IO::stderr = new IO::File("stderr", 2);
+
+    // And self
     _self = new MainProcess();
+  }
+
+  VM::~VM(){
+    for (auto &pt: threads){
+      pt.first->exit();
+    }
+
+    vm = nullptr;
   }
 
   void VM::loop(){
@@ -36,7 +58,7 @@ namespace popc{
   }
 
   void VM::start_process(Process *pr){
-    threads.push_back(std::move(std::thread([pr]{
+    auto thread = std::thread([pr]{
       _self = pr;
       try{
         printf("%s: Start\n", pr->name().c_str());
@@ -47,6 +69,14 @@ namespace popc{
       } catch (...) {
         printf("%s: unkwnon exception", pr->name().c_str());
       }
-    })));
+      pr->exit();
+    });
+
+    threads[pr] = std::move(thread);
+  }
+
+  void VM::stop_process(Process *pr){
+    pr->exit();
+    threads.erase(pr);
   }
 }
