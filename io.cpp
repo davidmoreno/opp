@@ -20,7 +20,7 @@ namespace popc::IO{
     close(fd);
   }
 
-  void File::process(){
+  void File::loop(){
     // printf("Process file %s %d\n", filename.c_str(), fd);
     // Build once, use man times
     std::map<Symbol, std::function<void(const std::any &)>> _case = {

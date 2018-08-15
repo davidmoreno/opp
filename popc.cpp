@@ -7,19 +7,6 @@ namespace popc{
     return vm->self();
   }
 
-  void start_process(Process *pr){
-    if (!vm){
-      throw popc::not_initialized();
-    }
-    vm->start_process(pr);
-  }
-  void stop_process(Process *pr){
-    if (!vm){
-      throw popc::not_initialized();
-    }
-    vm->stop_process(pr);
-  }
-
   void start(){
     new VM();
   }

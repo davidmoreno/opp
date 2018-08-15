@@ -2,26 +2,44 @@
 #include <unistd.h>
 #include "process.hpp"
 #include "popc.hpp"
+#include "vm.hpp"
 
 namespace popc{
   Symbol EXIT("exit");
   Symbol TIMEOUT("timeout");
+  Symbol DOWN("down");
 
-  Process::Process() : _name("noname"){
-    // printf("%s: New process %p\n", _name.c_str(), this);
-    _running=true;
-    popc::start_process(this);
-  }
   Process::Process(std::string &&name) : _name(name){
     // printf("%s: New process %p\n", _name.c_str(), this);
     _running=true;
-    popc::start_process(this);
+
+    thread = std::move(std::thread([this]{
+      try{
+        printf("%s: Start\n", this->name().c_str());
+        vm->self(this);
+        _inloop = true;
+        this->loop();
+        printf("%s: End\n", this->name().c_str());
+      } catch (std::exception &e){
+        printf("%s: EXIT exception %s", this->name().c_str(), e.what());
+      } catch (...) {
+        printf("%s: unknown exception", this->name().c_str());
+      }
+      _inloop = false;
+
+      for(auto pr: monitored_by){
+        pr->send(DOWN, {this});
+      }
+    }));
   }
 
   Process::~Process(){
     printf("%s: ~Process %p\n", _name.c_str(), this);
-    popc::stop_process(this);
     exit();
+    while(_inloop){
+
+    }
+    thread.join();
   }
 
   void Process::send(const Symbol &s, std::any &&msg){
@@ -34,8 +52,17 @@ namespace popc{
   }
 
   void Process::exit(){
+    printf("%s: exit\n", _name.c_str());
     _running = false;
-    newmessage.notify_all();
+    send(EXIT, 0);
+  }
+
+  void Process::monitor(){
+    monitored_by.insert(self());
+  }
+
+  void Process::demonitor(){
+    monitored_by.insert(self());
   }
 
   Symbol Process::receive(const std::map<Symbol, std::function<void(const std::any &)>> &case_, const std::chrono::seconds &timeout){
@@ -76,11 +103,11 @@ namespace popc{
     auto until = std::chrono::system_clock::now() + timeout;
 
     while(true){
-      printf("receive 2\n");
+      // printf("receive 2\n");
       std::unique_lock<std::mutex> lck(mtx);
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
-        printf("%s: Got message2\n", name().c_str());
+        // printf("%s: Got message2\n", name().c_str());
         const Symbol &s = msg->first;
         auto it = symbols.find(s);
         if (it == symbols.end())
@@ -92,7 +119,7 @@ namespace popc{
         return std::make_pair(*it, data);
       }
 
-      printf("%s: Wait for message2\n", name().c_str());
+      // printf("%s: Wait for message2\n", name().c_str());
       auto to_ = newmessage.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
         throw process_timeout();
@@ -107,11 +134,11 @@ namespace popc{
     auto until = std::chrono::system_clock::now() + timeout;
 
     while(true){
-      printf("receive 3\n");
+      // printf("receive 3\n");
       std::unique_lock<std::mutex> lck(mtx);
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
-        printf("%s: Got message3\n", name().c_str());
+        // printf("%s: Got message3\n", name().c_str());
         const Symbol &s = msg->first;
         if (s == symbol){
           auto data = std::move(msg->second);
@@ -120,7 +147,7 @@ namespace popc{
         }
       }
 
-      printf("%s: Wait for message3\n", name().c_str());
+      // printf("%s: Wait for message3\n", name().c_str());
       auto to_ = newmessage.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
         throw process_timeout();

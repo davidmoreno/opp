@@ -46,6 +46,4 @@ namespace popc{
   void start();
   void stop();
   Process *self();
-  void start_process(Process *pr);
-  void stop_process(Process *pr);
 }

@@ -15,7 +15,7 @@ namespace popc{
   class MainProcess : public Process{
   public:
     MainProcess() : Process("main"){};
-    virtual void process(){
+    virtual void loop(){
       while(running()){
         sleep(1000);
       }
@@ -42,10 +42,6 @@ namespace popc{
   }
 
   VM::~VM(){
-    for (auto &pt: threads){
-      pt.first->exit();
-    }
-
     vm = nullptr;
   }
 
@@ -57,27 +53,7 @@ namespace popc{
     return _self;
   }
 
-  void VM::start_process(Process *pr){
-    auto thread = std::thread([pr]{
-      _self = pr;
-      try{
-        printf("%s: Start\n", pr->name().c_str());
-        pr->process();
-        printf("%s: End\n", pr->name().c_str());
-      } catch (std::exception &e){
-        printf("%s: EXIT exception %s", pr->name().c_str(), e.what());
-      } catch (...) {
-        printf("%s: unkwnon exception", pr->name().c_str());
-      }
-      pr->exit();
-    });
-
-    threads[pr] = std::move(thread);
-  }
-
-  void VM::stop_process(Process *pr){
-    printf("%s: Stop\n", pr->name().c_str());
-    pr->exit();
-    threads.erase(pr);
+  void VM::self(Process *self){
+    _self = self;
   }
 }

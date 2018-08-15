@@ -16,7 +16,7 @@ namespace popc::IO{
     File(std::string &&filename, int fd);
     File(std::string &&filename);
     ~File();
-    virtual void process();
+    virtual void loop();
 
 
     // out funcs

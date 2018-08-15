@@ -14,18 +14,29 @@
 #include "popc.hpp"
 
 namespace popc {
+  class VM;
+
   extern Symbol EXIT;
   extern Symbol TIMEOUT;
+  extern Symbol DOWN;
 
   class Process{
-    std::vector<std::pair<Symbol, std::any>> messages;
-    std::mutex mtx;
-    std::condition_variable newmessage;
     std::string _name;
     bool _running;
+    bool _inloop;
+
+    std::mutex mtx;
+    std::thread thread;
+
+    std::vector<std::pair<Symbol, std::any>> messages;
+    std::condition_variable newmessage;
+
+    // These will receive "{DOWN, process}" when process stop running
+    std::set<Process *> monitored_by;
+    friend class VM;
   public:
 
-    Process();
+    Process() : Process("noname") {};
     Process(std::string &&name);
     Process(const Process &) = delete;
     virtual ~Process();
@@ -33,7 +44,7 @@ namespace popc {
     const std::string &name(){ return _name; };
 
     // First function to be called. Can not be on constructor as it runs on the callers context.
-    virtual void process(){
+    virtual void loop(){
       throw popc::not_implemented();
     };
 
@@ -41,6 +52,9 @@ namespace popc {
     void send(const Symbol &, std::any &&msg);
     void exit();
     bool running(){ return _running; }
+    void monitor();
+    void demonitor();
+
 
     // FIXME. This is the lazy wait. On all send wil lcheck the full queue.
     // The nice way would be on each receive first check the message queue, and

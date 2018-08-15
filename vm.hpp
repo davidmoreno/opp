@@ -1,13 +1,15 @@
 #pragma once
 
-#include <thread>
-#include <map>
+#include <mutex>
+#include <set>
+
 
 namespace popc{
   class Process;
 
   class VM{
-    std::map<Process *, std::thread> threads;
+    std::mutex mutex;
+    std::set<Process *> processes;
   public:
     VM();
     ~VM();
@@ -15,8 +17,7 @@ namespace popc{
     void loop_thread();
 
     Process *self();
-    void start_process(Process *pr);
-    void stop_process(Process *pr);
+    void self(Process *);
   };
 
   extern VM *vm;
