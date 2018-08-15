@@ -76,6 +76,7 @@ namespace popc{
   }
 
   void VM::stop_process(Process *pr){
+    printf("%s: Stop\n", pr->name().c_str());
     pr->exit();
     threads.erase(pr);
   }
