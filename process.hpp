@@ -30,7 +30,7 @@ namespace opp {
     std::thread thread;
 
     std::vector<std::pair<Symbol, std::any>> messages;
-    std::condition_variable newmessage;
+    std::condition_variable message_signal;
 
     // These will receive "{DOWN, process}" when process stop running
     std::set<Process *> monitored_by;

@@ -52,7 +52,7 @@ namespace opp{
     // printf("%s: Send %s\n", name().c_str(), s.name());
     std::unique_lock<std::mutex> lck(mtx);
     messages.push_back(std::make_pair(s, msg));
-    newmessage.notify_all();
+    message_signal.notify_all();
   }
 
   void Process::exit(){
@@ -93,7 +93,7 @@ namespace opp{
       }
 
       // printf("%s: Wait for message1\n", name().c_str());
-      auto to_ = newmessage.wait_until(lck, until);
+      auto to_ = message_signal.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
         throw process_timeout();
       if (!running())
@@ -124,7 +124,7 @@ namespace opp{
       }
 
       // printf("%s: Wait for message2\n", name().c_str());
-      auto to_ = newmessage.wait_until(lck, until);
+      auto to_ = message_signal.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
         throw process_timeout();
       if (!running())
@@ -152,7 +152,7 @@ namespace opp{
       }
 
       // printf("%s: Wait for message3\n", name().c_str());
-      auto to_ = newmessage.wait_until(lck, until);
+      auto to_ = message_signal.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
         throw process_timeout();
       if (!running())
