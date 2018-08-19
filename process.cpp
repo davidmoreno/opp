@@ -83,8 +83,16 @@ namespace opp{
         // printf("%s: Got message1\n", name().c_str());
         const Symbol &s = msg->first;
         auto it = case_.find(s);
-        if (it == case_.end())
+        if (it == case_.end()){
+          if (s == EXIT){
+            throw opp::process_exit(std::any_cast<Process*>(msg->second));
+          }
+          if (s == TIMEOUT){
+            throw opp::process_timeout(std::any_cast<Process*>(msg->second));
+          }
+
           continue; // Not in my case
+        }
         // printf("%s: Message for me: %s!\n", name().c_str(), msg->first.name());
         (it->second)(msg->second);
 
@@ -114,8 +122,16 @@ namespace opp{
         // printf("%s: Got message2\n", name().c_str());
         const Symbol &s = msg->first;
         auto it = symbols.find(s);
-        if (it == symbols.end())
+        if (it == symbols.end()){
+          if (s == EXIT){
+            throw opp::process_exit(std::any_cast<Process*>(msg->second));
+          }
+          if (s == TIMEOUT){
+            throw opp::process_timeout(std::any_cast<Process*>(msg->second));
+          }
+
           continue; // Not in my case
+        }
 
         auto data = std::move(msg->second);
 
@@ -150,10 +166,10 @@ namespace opp{
           return data;
         }
         if (s == EXIT){
-          throw opp::process_exit(this);
+          throw opp::process_exit(std::any_cast<Process*>(msg->second));
         }
         if (s == TIMEOUT){
-          throw opp::process_timeout(this);
+          throw opp::process_timeout(std::any_cast<Process*>(msg->second));
         }
       }
 
