@@ -48,7 +48,7 @@ namespace opp{
 
   void Process::send(const Symbol &s, std::any &&msg){
     if (!running())
-      throw opp::process_exit();
+      throw opp::process_exit(this);
     // printf("%s: Send %s\n", name().c_str(), s.name());
     std::unique_lock<std::mutex> lck(mtx);
     messages.push_back(std::make_pair(s, msg));
@@ -95,9 +95,9 @@ namespace opp{
       // printf("%s: Wait for message1\n", name().c_str());
       auto to_ = message_signal.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
-        throw process_timeout();
+        throw process_timeout(this);
       if (!running())
-        throw process_exit();
+        throw process_exit(this);
     }
   }
   std::pair<Symbol, std::any> Process::receive(const std::set<Symbol> &symbols, const std::chrono::seconds &timeout){
@@ -126,9 +126,9 @@ namespace opp{
       // printf("%s: Wait for message2\n", name().c_str());
       auto to_ = message_signal.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
-        throw process_timeout();
+        throw process_timeout(this);
       if (!running())
-        throw process_exit();
+        throw process_exit(this);
     }
   }
   std::any Process::receive(Symbol symbol, const std::chrono::seconds &timeout){
@@ -150,19 +150,19 @@ namespace opp{
           return data;
         }
         if (s == EXIT){
-          throw opp::process_exit();
+          throw opp::process_exit(this);
         }
         if (s == TIMEOUT){
-          throw opp::process_timeout();
+          throw opp::process_timeout(this);
         }
       }
 
       // printf("%s: Wait for message3\n", name().c_str());
       auto to_ = message_signal.wait_until(lck, until);
       if (to_ == std::cv_status::timeout)
-        throw process_timeout();
+        throw process_timeout(this);
       if (!running())
-        throw process_exit();
+        throw process_exit(this);
     }
   }
 }
