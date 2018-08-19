@@ -52,6 +52,7 @@ namespace opp::IO{
         do{
           ssize_t n = read(fd, &c, 1);
           if (n!=1){
+            from->send(EXIT, {});
             throw opp::IO::read_error();
           }
           ret+=c;

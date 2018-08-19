@@ -142,12 +142,18 @@ namespace opp{
       std::unique_lock<std::mutex> lck(mtx);
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
-        // printf("%s: Got message3\n", name().c_str());
+        printf("%s: Got message3\n", name().c_str());
         const Symbol &s = msg->first;
         if (s == symbol){
           auto data = std::move(msg->second);
           messages.erase(msg);
           return data;
+        }
+        if (s == EXIT){
+          throw opp::process_exit();
+        }
+        if (s == TIMEOUT){
+          throw opp::process_timeout();
         }
       }
 
