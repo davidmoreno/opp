@@ -9,21 +9,23 @@ namespace opp{
   Symbol TIMEOUT("timeout");
   Symbol DOWN("down");
 
+  std::chrono::seconds Process::FOREVER = std::chrono::hours(24*265*100);
+
   Process::Process(std::string &&name) : _name(name){
     // printf("%s: New process %p\n", _name.c_str(), this);
     _running=true;
 
     thread = std::move(std::thread([this]{
       try{
-        printf("%s: Start\n", this->name().c_str());
+        // printf("%s: Start\n", this->name().c_str());
         vm->self(this);
         _inloop = true;
         this->loop();
-        printf("%s: End\n", this->name().c_str());
+        // printf("%s: End\n", this->name().c_str());
       } catch (std::exception &e){
-        printf("%s: EXIT exception %s", this->name().c_str(), e.what());
+        fprintf(stderr, "%s: EXIT exception %s", this->name().c_str(), e.what());
       } catch (...) {
-        printf("%s: unknown exception", this->name().c_str());
+        fprintf(stderr, "%s: unknown exception", this->name().c_str());
       }
       _inloop = false;
 
@@ -34,10 +36,9 @@ namespace opp{
   }
 
   Process::~Process(){
-    printf("%s: ~Process %p\n", _name.c_str(), this);
+    // printf("%s: ~Process %p\n", _name.c_str(), this);
     exit();
-    while(_inloop){
-
+    while(_inloop){ // FIXME spinning to get stop
     }
     thread.join();
   }

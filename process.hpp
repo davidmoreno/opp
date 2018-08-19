@@ -8,6 +8,7 @@
 #include <chrono>
 #include <any>
 #include <mutex>
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include "symbol.hpp"
@@ -22,8 +23,8 @@ namespace opp {
 
   class Process{
     std::string _name;
-    bool _running;
-    bool _inloop;
+    std::atomic<bool> _running;
+    std::atomic<bool> _inloop;
 
     std::mutex mtx;
     std::thread thread;
@@ -35,6 +36,7 @@ namespace opp {
     std::set<Process *> monitored_by;
     friend class VM;
   public:
+    static std::chrono::seconds FOREVER;
 
     Process() : Process("noname") {};
     Process(std::string &&name);

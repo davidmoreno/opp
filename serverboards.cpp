@@ -16,7 +16,7 @@ namespace Serverboards{
   }
 
   void process_request(json &&req){
-    opp::IO::stderr->println("parse");
+    opp::IO::stderr->println("parse: " + req.dump());
   }
 
   void loop(){
@@ -28,9 +28,8 @@ namespace Serverboards{
         auto req = json::parse(line);
         process_request(std::move(req));
 
-
-        opp::IO::stderr->println("Debug STOP");
-        data.running=false; // To stop on debug
+        // opp::IO::stderr->println("Debug STOP");
+        // data.running=false; // To stop on debug
       };
     } catch (std::exception &e){
       printf("Exception exit: %s\n", e.what());

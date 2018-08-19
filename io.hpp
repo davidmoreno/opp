@@ -9,6 +9,12 @@ namespace opp::IO{
     }
   };
 
+  class read_error : public opp::exception{
+    virtual const char* what() const throw(){
+      return "read error";
+    }
+  };
+
   class File : opp::Process{
     std::string filename;
     int fd;

@@ -46,13 +46,22 @@ namespace opp::IO{
       }},
       {READLINE, [this](const std::any &args){
         auto from = std::any_cast<Process*>(args);
-        printf("%s: Answer for %s\n", name().c_str(), from->name().c_str());
-        from->send(READLINE_RESULT, std::string("{}"));
+        // printf("%s: Answer for %s\n", name().c_str(), from->name().c_str());
+        std::string ret="";
+        char c;
+        do{
+          ssize_t n = read(fd, &c, 1);
+          if (n!=1){
+            throw opp::IO::read_error();
+          }
+          ret+=c;
+        }while(c!='\n');
+        from->send(READLINE_RESULT, ret);
       }}
     };
 
     while(true){ // This will exit because of an exception when closed
-      receive(_case);
+      receive(_case, FOREVER);
     }
   }
 
@@ -66,7 +75,7 @@ namespace opp::IO{
 
   std::string File::readline(){
     send(READLINE, {opp::self()});
-    auto res = opp::self()->receive(READLINE_RESULT);
+    auto res = opp::self()->receive(READLINE_RESULT, Process::FOREVER);
     std::string str = std::any_cast<std::string>(res);
     println(std::string("Got something. ") + str);
     return str;
