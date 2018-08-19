@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <unistd.h>
+#include <sstream>
 #include "vm.hpp"
 #include "process.hpp"
 #include "io.hpp"
@@ -55,5 +56,26 @@ namespace opp{
 
   void VM::self(Process *self){
     _self = self;
+  }
+
+  void VM::add_process(Process *pr){
+    std::unique_lock<std::mutex> lck(mutex);
+    processes.insert(pr);
+  }
+  void VM::remove_process(Process *pr){
+    std::unique_lock<std::mutex> lck(mutex);
+    processes.erase(pr);
+  }
+  void VM::print_stats(){
+    std::unique_lock<std::mutex> lck(mutex);
+    std::ostringstream stats;
+    stats<<"process_count: "<<processes.size()<<std::endl;
+    stats<<"processes: "<<std::endl;
+
+    for(const auto &p: processes){
+      stats<<"  -name: "<<p->name()<<std::endl;
+    }
+
+    IO::stderr->print(stats.str());
   }
 }

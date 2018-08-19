@@ -18,6 +18,11 @@ namespace opp{
 
     Process *self();
     void self(Process *);
+
+    void add_process(Process *);
+    void remove_process(Process *);
+
+    void print_stats();
   };
 
   extern VM *vm;

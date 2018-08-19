@@ -33,6 +33,8 @@ namespace opp{
         pr->send(DOWN, {this});
       }
     }));
+
+    vm->add_process(this);
   }
 
   Process::~Process(){
@@ -40,6 +42,7 @@ namespace opp{
     exit();
     while(_inloop){ // FIXME spinning to get stop
     }
+    vm->remove_process(this);
     thread.join();
   }
 

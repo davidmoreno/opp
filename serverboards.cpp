@@ -1,6 +1,7 @@
 #include <map>
 #include <iostream>
 #include "io.hpp"
+#include "vm.hpp"
 #include "serverboards.hpp"
 
 
@@ -16,7 +17,7 @@ namespace Serverboards{
   }
 
   void process_request(json &&req){
-    opp::IO::stderr->println("parse: " + req.dump());
+    opp::IO::stderr->println("process: " + req.dump());
   }
 
   void loop(){
@@ -28,6 +29,8 @@ namespace Serverboards{
         auto req = json::parse(line);
         process_request(std::move(req));
 
+
+        opp::vm->print_stats();
         // opp::IO::stderr->println("Debug STOP");
         // data.running=false; // To stop on debug
       };

@@ -77,7 +77,6 @@ namespace opp::IO{
     send(READLINE, {opp::self()});
     auto res = opp::self()->receive(READLINE_RESULT, Process::FOREVER);
     std::string str = std::any_cast<std::string>(res);
-    println(std::string("Got something. ") + str);
     return str;
   }
 }
