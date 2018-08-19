@@ -58,7 +58,7 @@ namespace opp {
     void demonitor();
 
 
-    // FIXME. This is the lazy wait. On all send wil lcheck the full queue.
+    // FIXME. This is the lazy wait. On all send will check the full queue.
     // The nice way would be on each receive first check the message queue, and
     // then wait for my message.
     // We do it frist like this as its easier to ust check the full queue
