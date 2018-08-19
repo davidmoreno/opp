@@ -2,7 +2,7 @@
 #include "process.hpp"
 #include "vm.hpp"
 
-namespace popc{
+namespace opp{
   Process *self(){
     return vm->self();
   }
@@ -12,7 +12,7 @@ namespace popc{
   }
   void stop(){
     if (!vm)
-      throw popc::not_initialized();
+      throw opp::not_initialized();
     delete vm;
   }
 }

@@ -1,10 +1,10 @@
 #include <iostream>
 #include <unistd.h>
 #include "process.hpp"
-#include "popc.hpp"
+#include "opp.hpp"
 #include "vm.hpp"
 
-namespace popc{
+namespace opp{
   Symbol EXIT("exit");
   Symbol TIMEOUT("timeout");
   Symbol DOWN("down");
@@ -44,7 +44,7 @@ namespace popc{
 
   void Process::send(const Symbol &s, std::any &&msg){
     if (!running())
-      throw popc::process_exit();
+      throw opp::process_exit();
     // printf("%s: Send %s\n", name().c_str(), s.name());
     std::unique_lock<std::mutex> lck(mtx);
     messages.push_back(std::make_pair(s, msg));

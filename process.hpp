@@ -11,9 +11,9 @@
 #include <condition_variable>
 #include <functional>
 #include "symbol.hpp"
-#include "popc.hpp"
+#include "opp.hpp"
 
-namespace popc {
+namespace opp {
   class VM;
 
   extern Symbol EXIT;
@@ -45,7 +45,7 @@ namespace popc {
 
     // First function to be called. Can not be on constructor as it runs on the callers context.
     virtual void loop(){
-      throw popc::not_implemented();
+      throw opp::not_implemented();
     };
 
     // Sends a message to this process

@@ -2,7 +2,7 @@
 #include "serverboards.hpp"
 
 int main(int argc, char **argv){
-  auto vm = popc::VM();
+  auto vm = opp::VM();
 
   Serverboards::rpc_method("echo", [](const json &args){
     return args;

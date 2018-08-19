@@ -5,7 +5,7 @@
 #include "process.hpp"
 #include "io.hpp"
 
-namespace popc{
+namespace opp{
   /**
    * @short This is a fake process to allow to have calls from the main process
    *
@@ -28,14 +28,14 @@ namespace popc{
 
   VM::VM(){
     if (vm){
-      throw popc::already_initialized();
+      throw opp::already_initialized();
     }
     vm = this;
 
     // Start some required classes
-    popc::IO::stdin = new IO::File("stdin", 0);
-    popc::IO::stdout = new IO::File("stdout", 1);
-    popc::IO::stderr = new IO::File("stderr", 2);
+    opp::IO::stdin = new IO::File("stdin", 0);
+    opp::IO::stdout = new IO::File("stdout", 1);
+    opp::IO::stderr = new IO::File("stderr", 2);
 
     // And self
     _self = new MainProcess();

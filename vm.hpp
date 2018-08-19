@@ -4,7 +4,7 @@
 #include <set>
 
 
-namespace popc{
+namespace opp{
   class Process;
 
   class VM{

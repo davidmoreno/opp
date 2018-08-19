@@ -1,6 +1,6 @@
 #include <ostream>
 
-namespace popc{
+namespace opp{
   class Symbol{
     int _id;
     const char *_name;

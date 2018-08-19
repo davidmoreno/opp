@@ -1,13 +1,13 @@
 #include <iostream>
 #include <unistd.h>
 #include "io.hpp"
-#include "popc.hpp"
+#include "opp.hpp"
 
-namespace popc::IO{
-  static popc::Symbol PRINT("print");
-  static popc::Symbol PRINTLN("println");
-  static popc::Symbol READLINE("readline");
-  static popc::Symbol READLINE_RESULT("readline_result");
+namespace opp::IO{
+  static opp::Symbol PRINT("print");
+  static opp::Symbol PRINTLN("println");
+  static opp::Symbol READLINE("readline");
+  static opp::Symbol READLINE_RESULT("readline_result");
 
   File *stdin = nullptr;
   File *stdout = nullptr;
@@ -65,8 +65,8 @@ namespace popc::IO{
   }
 
   std::string File::readline(){
-    send(READLINE, {popc::self()});
-    auto res = popc::self()->receive(READLINE_RESULT);
+    send(READLINE, {opp::self()});
+    auto res = opp::self()->receive(READLINE_RESULT);
     std::string str = std::any_cast<std::string>(res);
     println(std::string("Got something. ") + str);
     return str;

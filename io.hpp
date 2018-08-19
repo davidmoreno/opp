@@ -2,14 +2,14 @@
 
 #include "process.hpp"
 
-namespace popc::IO{
-  class write_error : public popc::exception{
+namespace opp::IO{
+  class write_error : public opp::exception{
     virtual const char* what() const throw(){
       return "write error";
     }
   };
 
-  class File : popc::Process{
+  class File : opp::Process{
     std::string filename;
     int fd;
   public:
