@@ -30,6 +30,7 @@ namespace opp::Logger{
     virtual void loop();
 
     void log(const char *filename, int lineno, LogLevel loglevel, const std::string &msg);
+    void flush();
   };
 
   template<typename... Args>

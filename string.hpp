@@ -4,7 +4,7 @@ namespace std{
   inline std::string to_string(const char *str){
     return std::string(str);
   }
-  inline std::string to_string(char str){
+  inline std::string to_string(const char str){
     return std::string(1, str);
   }
 

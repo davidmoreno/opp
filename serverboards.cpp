@@ -29,7 +29,7 @@ namespace Serverboards{
     auto func = data.method_map.find(*method);
     if (func == data.method_map.end()){
       json ret = {{"id", req.at("id")}, {"error", "not_found"}};
-      OPP_DEBUG(ret.dump());
+      opp::IO::stdout->println(ret.dump());
       return;
     }
     try{
@@ -46,6 +46,10 @@ namespace Serverboards{
   void loop(){
     opp::Logger::Logger logger;
 
+    rpc_method("dir", [](const json &) -> json{
+      return {};
+    });
+
     data.running=true;
     OPP_DEBUG("Starting loop");
     while (data.running){
@@ -58,8 +62,9 @@ namespace Serverboards{
         // opp::IO::stderr->println("Debug STOP");
         // data.running=false; // To stop on debug
       } catch (opp::process_exit &){
-        OPP_DEBUG("Exit.")
-        return;
+        OPP_INFO("Exit.");
+        logger.flush();
+        exit(0);
       } catch (std::exception &e){
         fprintf(stderr, "Exception at Serverboards::loop: %s.\n", e.what());
         exit(1);
