@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <execinfo.h>
 #include "process.hpp"
 #include "opp.hpp"
 #include "vm.hpp"
@@ -10,6 +11,32 @@ namespace opp{
   Symbol DOWN("down");
 
   std::chrono::seconds Process::FOREVER = std::chrono::hours(24*265*100);
+
+  static void print_backtrace(){
+    void *array[10];
+    size_t size = backtrace(array, 10);
+    backtrace_symbols_fd(array, size, 2);
+    fprintf(stderr, "\n");
+  }
+
+  static void maybe_exit_or_timeout(const Symbol &s, const std::any &msg){
+    if (s == EXIT){
+      if (msg.type() == typeid(Process *)){
+        throw opp::process_exit(std::any_cast<Process*>(msg));
+      }
+      else{
+        throw opp::process_exit(nullptr);
+      }
+    }
+    if (s == TIMEOUT){
+      if (msg.type() == typeid(Process *)){
+        throw opp::process_timeout(std::any_cast<Process*>(msg));
+      }
+      else{
+        throw opp::process_timeout(nullptr);
+      }
+    }
+  }
 
   Process::Process(std::string &&name) : _name(name){
     // printf("%s: New process %p\n", _name.c_str(), this);
@@ -23,9 +50,11 @@ namespace opp{
         this->loop();
         // printf("%s: End\n", this->name().c_str());
       } catch (std::exception &e){
-        fprintf(stderr, "%s: EXIT exception %s", this->name().c_str(), e.what());
+        fprintf(stderr, "%s: Exit process. Exception: %s.\n", this->name().c_str(), e.what());
+        print_backtrace();
       } catch (...) {
-        fprintf(stderr, "%s: unknown exception", this->name().c_str());
+        fprintf(stderr, "%s: Exit process. Unknown exception.\n", this->name().c_str());
+        print_backtrace();
       }
       _inloop = false;
 
@@ -84,13 +113,7 @@ namespace opp{
         const Symbol &s = msg->first;
         auto it = case_.find(s);
         if (it == case_.end()){
-          if (s == EXIT){
-            throw opp::process_exit(std::any_cast<Process*>(msg->second));
-          }
-          if (s == TIMEOUT){
-            throw opp::process_timeout(std::any_cast<Process*>(msg->second));
-          }
-
+          maybe_exit_or_timeout(s, msg->second);
           continue; // Not in my case
         }
         // printf("%s: Message for me: %s!\n", name().c_str(), msg->first.name());
@@ -123,13 +146,7 @@ namespace opp{
         const Symbol &s = msg->first;
         auto it = symbols.find(s);
         if (it == symbols.end()){
-          if (s == EXIT){
-            throw opp::process_exit(std::any_cast<Process*>(msg->second));
-          }
-          if (s == TIMEOUT){
-            throw opp::process_timeout(std::any_cast<Process*>(msg->second));
-          }
-
+          maybe_exit_or_timeout(s, msg->second);
           continue; // Not in my case
         }
 
@@ -158,19 +175,14 @@ namespace opp{
       std::unique_lock<std::mutex> lck(mtx);
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
-        printf("%s: Got message3\n", name().c_str());
+        fprintf(::stderr, "New message 3: %s\n", msg->first.name());
         const Symbol &s = msg->first;
         if (s == symbol){
           auto data = std::move(msg->second);
           messages.erase(msg);
           return data;
         }
-        if (s == EXIT){
-          throw opp::process_exit(std::any_cast<Process*>(msg->second));
-        }
-        if (s == TIMEOUT){
-          throw opp::process_timeout(std::any_cast<Process*>(msg->second));
-        }
+        maybe_exit_or_timeout(s, msg->second);
       }
 
       // printf("%s: Wait for message3\n", name().c_str());
