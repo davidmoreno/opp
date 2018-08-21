@@ -175,7 +175,6 @@ namespace opp{
       std::unique_lock<std::mutex> lck(mtx);
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
-        fprintf(::stderr, "New message 3: %s\n", msg->first.name());
         const Symbol &s = msg->first;
         if (s == symbol){
           auto data = std::move(msg->second);

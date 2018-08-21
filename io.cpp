@@ -5,7 +5,6 @@
 
 namespace opp::IO{
   static opp::Symbol PRINT("print");
-  static opp::Symbol PRINTLN("println");
   static opp::Symbol READLINE("readline");
   static opp::Symbol READLINE_RESULT("readline_result");
 
@@ -32,18 +31,6 @@ namespace opp::IO{
           throw write_error();
         }
       }},
-      {PRINTLN, [this](const std::any &args){
-        // printf("Resolved print %s %d\n", filename.c_str(), fd);
-        auto str = std::any_cast<std::string>(args);
-        auto wrote = write(this->fd, str.c_str(), str.size());
-        if (wrote != signed(str.size())){
-          throw write_error();
-        }
-        wrote = write(this->fd, "\n", 1);
-        if (wrote != 1){
-          throw write_error();
-        }
-      }},
       {READLINE, [this](const std::any &args){
         auto from = std::any_cast<Process*>(args);
         // printf("%s: Answer for %s\n", name().c_str(), from->name().c_str());
@@ -67,12 +54,8 @@ namespace opp::IO{
     }
   }
 
-  void File::print(const std::string &str){
+  void File::print_(std::string &&str){
     send(PRINT, str);
-  }
-
-  void File::println(const std::string &str){
-    send(PRINTLN, str);
   }
 
   std::string File::readline(){

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "process.hpp"
+#include "string.hpp"
 
 namespace opp::IO{
   class write_error : public opp::exception{
@@ -26,8 +27,15 @@ namespace opp::IO{
 
 
     // out funcs
-    void print(const std::string &);
-    void println(const std::string &);
+    void print_(std::string &&str);
+    template<typename... Args>
+    void print(Args ...args){
+      print_(concat(args...));
+    }
+    template<typename... Args>
+    void println(Args... args){
+      print_(concat(args..., '\n'));
+    }
     // in funcs
     std::string readline();
   };
