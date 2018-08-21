@@ -5,6 +5,7 @@
 #include "vm.hpp"
 #include "process.hpp"
 #include "io.hpp"
+#include "term.hpp"
 
 namespace opp{
   /**
@@ -69,6 +70,7 @@ namespace opp{
   void VM::print_stats(){
     std::unique_lock<std::mutex> lck(mutex);
     std::ostringstream stats;
+    stats<<"\n";
     stats<<"process_count: "<<processes.size()<<std::endl;
     stats<<"processes: "<<std::endl;
 
@@ -76,6 +78,6 @@ namespace opp{
       stats<<"  -name: "<<p->name()<<std::endl;
     }
 
-    IO::stderr->print(stats.str());
+    IO::stderr->println(Term::color(stats.str(), Term::WHITE, Term::BLUE));
   }
 }

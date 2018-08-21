@@ -1,6 +1,7 @@
 #include <map>
 #include <iostream>
 #include "io.hpp"
+#include "term.hpp"
 #include "vm.hpp"
 #include "serverboards.hpp"
 
@@ -21,14 +22,13 @@ namespace Serverboards{
 
     auto method = req.find("method");
     if (method == req.end()){
-      opp::IO::stderr->println("no method");
+      opp::IO::stderr->println("No method. Maybe response.");
       return;
     }
     auto func = data.method_map.find(*method);
     if (func == data.method_map.end()){
-      opp::IO::stderr->println("unknown method");
       json ret = {{"id", req.at("id")}, {"error", "not_found"}};
-      opp::IO::stdout->println(ret.dump());
+      opp::IO::stdout->println(opp::Term::color(ret.dump(), opp::Term::GREEN));
       return;
     }
     try{
