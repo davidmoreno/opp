@@ -6,6 +6,7 @@
 #include "vm.hpp"
 #include "serverboards.hpp"
 #include "utils.hpp"
+#include "task.hpp"
 
 
 namespace Serverboards{
@@ -33,14 +34,17 @@ namespace Serverboards{
       opp::IO::stdout->println(ret.dump());
       return;
     }
-    try{
-      auto result = func->second(req.at("params"));
-      json ret = {{"id", req["id"]}, {"result", result}};
-      opp::IO::stdout->println(ret.dump());
-    } catch (const std::exception &e){
-      json ret = {{"id", req["id"]}, {"error", e.what()}};
-      opp::IO::stdout->println(ret.dump());
-    }
+    // Starts as new task, to do not block here.
+    opp::Task::start([func, req]{
+      try{
+        auto result = func->second(req.at("params"));
+        json ret = {{"id", req["id"]}, {"result", result}};
+        opp::IO::stdout->println(ret.dump());
+      } catch (const std::exception &e){
+        json ret = {{"id", req["id"]}, {"error", e.what()}};
+        opp::IO::stdout->println(ret.dump());
+      }
+    });
 
   }
 
