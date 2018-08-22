@@ -3,9 +3,9 @@
 #include "process.hpp"
 
 namespace opp::Task{
-  Process *start(std::function<void(void)> &&);
+  process *start(std::function<void(void)> &&);
 
-  class Task : public Process{
+  class Task : public process{
     std::function<void(void)> fn;
   public:
     Task(std::function<void(void)> &&fn);

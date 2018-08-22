@@ -6,11 +6,11 @@
 #include "vm.hpp"
 
 namespace opp{
-  Symbol EXIT("exit");
-  Symbol TIMEOUT("timeout");
-  Symbol DOWN("down");
+  symbol EXIT("exit");
+  symbol TIMEOUT("timeout");
+  symbol DOWN("down");
 
-  std::chrono::seconds Process::FOREVER = std::chrono::hours(24*265*100);
+  std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
 
   static void print_backtrace(){
     void *array[10];
@@ -19,18 +19,18 @@ namespace opp{
     fprintf(stderr, "\n");
   }
 
-  static void maybe_exit_or_timeout(const Symbol &s, const std::any &msg){
+  static void maybe_exit_or_timeout(const symbol &s, const std::any &msg){
     if (s == EXIT){
-      if (msg.type() == typeid(Process *)){
-        throw opp::process_exit(std::any_cast<Process*>(msg));
+      if (msg.type() == typeid(process *)){
+        throw opp::process_exit(std::any_cast<process*>(msg));
       }
       else{
         throw opp::process_exit(nullptr);
       }
     }
     if (s == TIMEOUT){
-      if (msg.type() == typeid(Process *)){
-        throw opp::process_timeout(std::any_cast<Process*>(msg));
+      if (msg.type() == typeid(process *)){
+        throw opp::process_timeout(std::any_cast<process*>(msg));
       }
       else{
         throw opp::process_timeout(nullptr);
@@ -38,7 +38,7 @@ namespace opp{
     }
   }
 
-  Process::Process(std::string &&name) : _name(name){
+  process::process(std::string &&name) : _name(name){
     // printf("%s: New process %p\n", _name.c_str(), this);
     _running=true;
 
@@ -66,8 +66,8 @@ namespace opp{
     vm->add_process(this);
   }
 
-  Process::~Process(){
-    // printf("%s: ~Process %p\n", _name.c_str(), this);
+  process::~process(){
+    // printf("%s: ~process %p\n", _name.c_str(), this);
     exit();
     while(_inloop){ // FIXME spinning to get stop
     }
@@ -75,7 +75,7 @@ namespace opp{
     thread.join();
   }
 
-  void Process::send(const Symbol &s, std::any &&msg){
+  void process::send(const symbol &s, std::any &&msg){
     if (!running())
       throw opp::process_exit(this);
     // printf("%s: Send %s\n", name().c_str(), s.name());
@@ -84,21 +84,21 @@ namespace opp{
     message_signal.notify_all();
   }
 
-  void Process::exit(){
+  void process::exit(){
     printf("%s: exit\n", _name.c_str());
     _running = false;
     send(EXIT, 0);
   }
 
-  void Process::monitor(){
+  void process::monitor(){
     monitored_by.insert(self());
   }
 
-  void Process::demonitor(){
+  void process::demonitor(){
     monitored_by.insert(self());
   }
 
-  Symbol Process::receive(const std::map<Symbol, std::function<void(const std::any &)>> &case_, const std::chrono::seconds &timeout){
+  symbol process::receive(const std::map<symbol, std::function<void(const std::any &)>> &case_, const std::chrono::seconds &timeout){
     if (self() != this)
       throw bad_receiver();
 
@@ -110,7 +110,7 @@ namespace opp{
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
         // printf("%s: Got message1\n", name().c_str());
-        const Symbol &s = msg->first;
+        const symbol &s = msg->first;
         auto it = case_.find(s);
         if (it == case_.end()){
           maybe_exit_or_timeout(s, msg->second);
@@ -131,7 +131,7 @@ namespace opp{
         throw process_exit(this);
     }
   }
-  std::pair<Symbol, std::any> Process::receive(const std::set<Symbol> &symbols, const std::chrono::seconds &timeout){
+  std::pair<symbol, std::any> process::receive(const std::set<symbol> &symbols, const std::chrono::seconds &timeout){
     if (self() != this)
       throw bad_receiver();
 
@@ -143,7 +143,7 @@ namespace opp{
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
         // printf("%s: Got message2\n", name().c_str());
-        const Symbol &s = msg->first;
+        const symbol &s = msg->first;
         auto it = symbols.find(s);
         if (it == symbols.end()){
           maybe_exit_or_timeout(s, msg->second);
@@ -164,7 +164,7 @@ namespace opp{
         throw process_exit(this);
     }
   }
-  std::any Process::receive(Symbol symbol, const std::chrono::seconds &timeout){
+  std::any process::receive(opp::symbol symbol, const std::chrono::seconds &timeout){
     if (self() != this)
       throw bad_receiver();
 
@@ -175,7 +175,7 @@ namespace opp{
       std::unique_lock<std::mutex> lck(mtx);
       auto endI = messages.end();
       for(auto msg=messages.begin();msg!=endI;++msg){
-        const Symbol &s = msg->first;
+        const opp::symbol &s = msg->first;
         if (s == symbol){
           auto data = std::move(msg->second);
           messages.erase(msg);

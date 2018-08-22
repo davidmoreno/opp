@@ -1,14 +1,14 @@
-#include "vm.hpp"
+#include "opp.hpp"
 #include "serverboards.hpp"
 
 int main(int argc, char **argv){
-  auto vm = opp::VM();
+  opp::start();
 
-  Serverboards::rpc_method("echo", [](const json &args){
+  serverboards::rpc_method("echo", [](const json &args){
     return args;
   });
 
-  Serverboards::loop();
+  serverboards::loop();
 
   printf("EXIT!! end!!\n");
 }

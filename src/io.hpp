@@ -3,7 +3,7 @@
 #include "process.hpp"
 #include "string.hpp"
 
-namespace opp::IO{
+namespace opp::io{
   class write_error : public opp::exception{
     virtual const char* what() const throw(){
       return "write error";
@@ -16,13 +16,13 @@ namespace opp::IO{
     }
   };
 
-  class File : opp::Process{
+  class file : opp::process{
     std::string filename;
     int fd;
   public:
-    File(std::string &&filename, int fd);
-    File(std::string &&filename);
-    ~File();
+    file(std::string &&filename, int fd);
+    file(std::string &&filename);
+    ~file();
     virtual void loop();
 
 
@@ -41,7 +41,7 @@ namespace opp::IO{
   };
 
 
-  extern File *stdin;
-  extern File *stdout;
-  extern File *stderr;
+  extern file *stdin;
+  extern file *stdout;
+  extern file *stderr;
 };

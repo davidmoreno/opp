@@ -9,7 +9,7 @@
 #include "task.hpp"
 
 
-namespace Serverboards{
+namespace serverboards{
   struct PrivateData{
     std::map<std::string, std::function<json(const json&)>> method_map;
     bool running = false;
@@ -31,7 +31,7 @@ namespace Serverboards{
     auto func = data.method_map.find(*method);
     if (func == data.method_map.end()){
       json ret = {{"id", req.at("id")}, {"error", "not_found"}};
-      opp::IO::stdout->println(ret.dump());
+      opp::io::stdout->println(ret.dump());
       return;
     }
     // Starts as new task, to do not block here.
@@ -39,17 +39,17 @@ namespace Serverboards{
       try{
         auto result = func->second(req.at("params"));
         json ret = {{"id", req["id"]}, {"result", result}};
-        opp::IO::stdout->println(ret.dump());
+        opp::io::stdout->println(ret.dump());
       } catch (const std::exception &e){
         json ret = {{"id", req["id"]}, {"error", e.what()}};
-        opp::IO::stdout->println(ret.dump());
+        opp::io::stdout->println(ret.dump());
       }
     });
 
   }
 
   void loop(){
-    opp::Logger::Logger logger;
+    opp::logger::logger logger;
 
     rpc_method("dir", [](const json &) -> json{
       return opp::utils::extract_keys(data.method_map);
@@ -59,19 +59,19 @@ namespace Serverboards{
     OPP_DEBUG("Starting loop");
     while (data.running){
       try{
-        auto line = opp::IO::stdin->readline();
+        auto line = opp::io::stdin->readline();
         auto req = json::parse(line);
         process_request(std::move(req));
 
         opp::vm->print_stats();
-        // opp::IO::stderr->println("Debug STOP");
+        // opp::io::stderr->println("Debug STOP");
         // data.running=false; // To stop on debug
       } catch (opp::process_exit &){
         OPP_INFO("Exit.");
         logger.flush();
         exit(0);
       } catch (std::exception &e){
-        fprintf(stderr, "Exception at Serverboards::loop: %s.\n", e.what());
+        fprintf(stderr, "Exception at serverboards::loop: %s.\n", e.what());
         exit(1);
       }
     };

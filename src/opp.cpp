@@ -3,7 +3,7 @@
 #include "vm.hpp"
 
 namespace opp{
-  Process *self(){
+  process *self(){
     return vm->self();
   }
 

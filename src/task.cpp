@@ -3,7 +3,7 @@
 
 namespace opp::Task{
 
-  Process *start(std::function<void(void)> &&fn){
+  process *start(std::function<void(void)> &&fn){
     auto task = new Task(std::move(fn));
     return task;
   }

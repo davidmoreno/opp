@@ -3,7 +3,7 @@
 #include <exception>
 
 namespace opp{
-  class Process;
+  class process;
 
   class exception : public std::exception {};
 
@@ -16,8 +16,8 @@ namespace opp{
 
   class process_exception : public opp::exception {
   public:
-    Process *process;
-    process_exception(Process *pr) : process(pr){};
+    opp::process *process;
+    process_exception(opp::process *pr) : process(pr){};
     const char *what() const noexcept{
       return "Receive on wrong process. Only currently executing process can call receive.";
     }
@@ -25,7 +25,7 @@ namespace opp{
 
   class process_timeout : public opp::process_exception {
   public:
-    process_timeout(Process *pr) : process_exception(pr){};
+    process_timeout(opp::process *pr) : process_exception(pr){};
     const char *what() const noexcept{
       return "timeout";
     }
@@ -33,7 +33,7 @@ namespace opp{
 
   class process_exit : public opp::process_exception {
   public:
-    process_exit(Process *pr) : process_exception(pr){};
+    process_exit(opp::process *pr) : process_exception(pr){};
     const char *what() const noexcept{
       return "exit";
     }
@@ -62,5 +62,5 @@ namespace opp{
 
   void start();
   void stop();
-  Process *self();
+  process *self();
 }

@@ -14,9 +14,9 @@ namespace opp{
    * This is just a placeholder to allow to send and receive message from the
    * main process.
    */
-  class MainProcess : public Process{
+  class MainProcess : public process{
   public:
-    MainProcess() : Process("main"){};
+    MainProcess() : process("main"){};
     virtual void loop(){
       while(running()){
         sleep(1000);
@@ -26,7 +26,7 @@ namespace opp{
 
 
   VM *vm = nullptr;
-  static thread_local Process *_self=nullptr;
+  static thread_local process *_self=nullptr;
 
   VM::VM(){
     if (vm){
@@ -35,9 +35,9 @@ namespace opp{
     vm = this;
 
     // Start some required classes
-    opp::IO::stdin = new IO::File("stdin", 0);
-    opp::IO::stdout = new IO::File("stdout", 1);
-    opp::IO::stderr = new IO::File("stderr", 2);
+    opp::io::stdin = new io::file("stdin", 0);
+    opp::io::stdout = new io::file("stdout", 1);
+    opp::io::stderr = new io::file("stderr", 2);
 
     // And self
     _self = new MainProcess();
@@ -51,19 +51,19 @@ namespace opp{
 
   }
 
-  Process *VM::self(){
+  process *VM::self(){
     return _self;
   }
 
-  void VM::self(Process *self){
+  void VM::self(process *self){
     _self = self;
   }
 
-  void VM::add_process(Process *pr){
+  void VM::add_process(process *pr){
     std::unique_lock<std::mutex> lck(mutex);
     processes.insert(pr);
   }
-  void VM::remove_process(Process *pr){
+  void VM::remove_process(process *pr){
     std::unique_lock<std::mutex> lck(mutex);
     processes.erase(pr);
   }
@@ -78,6 +78,6 @@ namespace opp{
       stats<<"  -name: "<<p->name()<<std::endl;
     }
 
-    IO::stderr->println(Term::color(stats.str(), Term::WHITE, Term::BLUE));
+    io::stderr->println(term::color(stats.str(), term::WHITE, term::BLUE));
   }
 }

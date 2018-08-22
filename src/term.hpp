@@ -1,6 +1,6 @@
 #include <sstream>
 
-namespace opp::Term{
+namespace opp::term{
   enum Color{
     RED=31,
     GREEN=32,

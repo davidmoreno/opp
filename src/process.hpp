@@ -15,13 +15,13 @@
 #include "opp.hpp"
 
 namespace opp {
-  class VM;
+  class vm;
 
-  extern Symbol EXIT;
-  extern Symbol TIMEOUT;
-  extern Symbol DOWN;
+  extern symbol EXIT;
+  extern symbol TIMEOUT;
+  extern symbol DOWN;
 
-  class Process{
+  class process{
     std::string _name;
     std::atomic<bool> _running;
     std::atomic<bool> _inloop;
@@ -29,19 +29,19 @@ namespace opp {
     std::mutex mtx;
     std::thread thread;
 
-    std::vector<std::pair<Symbol, std::any>> messages;
+    std::vector<std::pair<symbol, std::any>> messages;
     std::condition_variable message_signal;
 
     // These will receive "{DOWN, process}" when process stop running
-    std::set<Process *> monitored_by;
-    friend class VM;
+    std::set<process *> monitored_by;
+    friend class vm;
   public:
     static std::chrono::seconds FOREVER;
 
-    Process() : Process("noname") {};
-    Process(std::string &&name);
-    Process(const Process &) = delete;
-    virtual ~Process();
+    process() : process("noname") {};
+    process(std::string &&name);
+    process(const process &) = delete;
+    virtual ~process();
 
     const std::string &name(){ return _name; };
 
@@ -51,7 +51,7 @@ namespace opp {
     };
 
     // Sends a message to this process
-    void send(const Symbol &, std::any &&msg);
+    void send(const symbol &, std::any &&msg);
     void exit();
     bool running(){ return _running; }
     void monitor();
@@ -66,8 +66,8 @@ namespace opp {
 
     // returns or blocks. Filter is called on each function to know if
     // thats what you were waiting for. The process may loose the thread.
-    Symbol receive(const std::map<Symbol, std::function<void(const std::any &)>> &case_, const std::chrono::seconds &timeout=std::chrono::seconds(5));
-    std::pair<Symbol, std::any> receive(const std::set<Symbol> &symbols, const std::chrono::seconds &timeout=std::chrono::seconds(5));
-    std::any receive(Symbol, const std::chrono::seconds &timeout=std::chrono::seconds(5));
+    symbol receive(const std::map<symbol, std::function<void(const std::any &)>> &case_, const std::chrono::seconds &timeout=std::chrono::seconds(5));
+    std::pair<symbol, std::any> receive(const std::set<symbol> &symbols, const std::chrono::seconds &timeout=std::chrono::seconds(5));
+    std::any receive(symbol, const std::chrono::seconds &timeout=std::chrono::seconds(5));
   };
 }

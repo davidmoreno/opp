@@ -5,22 +5,22 @@
 
 
 namespace opp{
-  class Process;
+  class process;
 
   class VM{
     std::mutex mutex;
-    std::set<Process *> processes;
+    std::set<process *> processes;
   public:
     VM();
     ~VM();
     void loop();
     void loop_thread();
 
-    Process *self();
-    void self(Process *);
+    process *self();
+    void self(process *);
 
-    void add_process(Process *);
-    void remove_process(Process *);
+    void add_process(process *);
+    void remove_process(process *);
 
     void print_stats();
   };

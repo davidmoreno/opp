@@ -2,11 +2,11 @@
 #include "io.hpp"
 #include "logger.hpp"
 
-namespace opp::Logger{
-  Logger *logger = nullptr;
-  static Symbol LOG("log");
-  static Symbol FLUSH("flush");
-  static Symbol FLUSH_READY("flush_ready");
+namespace opp::logger{
+  logger *__logger = nullptr;
+  static symbol LOG("log");
+  static symbol FLUSH("flush");
+  static symbol FLUSH_READY("flush_ready");
 
   struct LogMessage{
     const char *filename;
@@ -15,14 +15,14 @@ namespace opp::Logger{
     std::string message;
   };
 
-  Logger::Logger(){
-    logger = this;
+  logger::logger(){
+    __logger = this;
   }
-  Logger::~Logger(){
-    logger = nullptr;
+  logger::~logger(){
+    __logger = nullptr;
   }
 
-  void Logger::loop(){
+  void logger::loop(){
     while(running()){
       receive({
         {LOG, [](const std::any &message){
@@ -36,43 +36,43 @@ namespace opp::Logger{
           auto msg = std::any_cast<LogMessage>(message);
           auto filename = basename(strdupa(msg.filename));
 
-          auto color = Term::WHITE;
+          auto color = term::WHITE;
           switch(msg.loglevel){
             case DEBUG:
-              color = Term::BLUE;
+              color = term::BLUE;
             break;
             case WARNING:
-              color = Term::YELLOW;
+              color = term::YELLOW;
             break;
             case ERROR:
-              color = Term::RED;
+              color = term::RED;
             break;
             case INFO:
-              color = Term::WHITE;
+              color = term::WHITE;
             break;
           }
 
-          opp::IO::stderr->println(Term::color(
+          opp::io::stderr->println(term::color(
             opp::concat(
               "[", timestamp, "] ",
               "[", filename, ":", msg.lineno, "]\t"
             ), color),
             msg.message
-          ); //Term::color("msg"), Term::RED);
+          ); //term::color("msg"), term::RED);
         }},
         {FLUSH, [](const std::any &pr){
-          auto process = std::any_cast<Process*>(pr);
+          auto process = std::any_cast<opp::process*>(pr);
           process->send(FLUSH_READY, {});
         }}
       });
     }
   }
 
-  void Logger::log(const char *filename, int lineno, LogLevel loglevel, const std::string &msg){
+  void logger::log(const char *filename, int lineno, LogLevel loglevel, const std::string &msg){
     send(LOG, LogMessage{filename, lineno, loglevel, msg});
   }
   /// Blocks until this is processed
-  void Logger::flush(){
+  void logger::flush(){
     send(FLUSH, this);
     receive(FLUSH_READY);
   }
