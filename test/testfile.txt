@@ -1,0 +1,3 @@
+{"method": "dir", "id": 1, "params": []}
+{"method": "echo", "id": 2, "params": ["hello world"]}
+{"method": "xecho", "id": 2, "params": ["hello world"]}

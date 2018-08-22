@@ -5,6 +5,7 @@
 #include "term.hpp"
 #include "vm.hpp"
 #include "serverboards.hpp"
+#include "utils.hpp"
 
 
 namespace Serverboards{
@@ -47,7 +48,7 @@ namespace Serverboards{
     opp::Logger::Logger logger;
 
     rpc_method("dir", [](const json &) -> json{
-      return {};
+      return opp::utils::extract_keys(data.method_map);
     });
 
     data.running=true;
