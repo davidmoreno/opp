@@ -19,7 +19,7 @@ namespace opp{
   public:
     std::shared_ptr<opp::process> process;
     process_exception(std::shared_ptr<opp::process> pr) : process(pr){
-      print_backtrace();
+      // print_backtrace();
     };
     const char *what() const noexcept{
       return "Receive on wrong process. Only currently executing process can call receive.";
@@ -29,7 +29,7 @@ namespace opp{
   class process_timeout : public opp::process_exception {
   public:
     process_timeout(std::shared_ptr<opp::process> pr) : process_exception(pr){
-      print_backtrace();
+      // print_backtrace();
     };
     const char *what() const noexcept{
       return "timeout";
