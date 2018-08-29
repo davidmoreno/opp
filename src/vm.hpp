@@ -3,6 +3,7 @@
 #include <mutex>
 #include <vector>
 #include <memory>
+#include <atomic>
 
 
 namespace opp{
@@ -11,6 +12,8 @@ namespace opp{
   class VM{
     std::mutex mutex;
     std::vector<std::shared_ptr<process>> processes;
+    std::atomic<bool> running;
+
   public:
     VM();
     ~VM();
@@ -27,6 +30,7 @@ namespace opp{
     void stop(std::shared_ptr<process> pr);
 
     void print_stats();
+    void clean_processes();
   };
 
   extern std::shared_ptr<VM> vm;

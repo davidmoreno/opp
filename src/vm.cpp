@@ -22,6 +22,7 @@ namespace opp{
     virtual void loop(){
       while(running()){
         sleep(1);
+        vm->clean_processes();
       }
     }
   };
@@ -39,6 +40,7 @@ namespace opp{
 
 
   void VM::start(){
+    running = true;
     _self = opp::start<main_process>();
 
     // Start some required classes
@@ -51,6 +53,8 @@ namespace opp{
 
   void VM::stop(){
     std::cerr<<"Finishing the vm. Stopping all processes."<<std::endl;
+
+    running = false;
     std::unique_lock<std::mutex> lck(mutex);
     for(auto pr: processes){
       if (pr->running()){
@@ -114,5 +118,18 @@ namespace opp{
     }
 
     io::stderr->println(term::color(stats.str(), term::WHITE, term::BLUE));
+  }
+
+  /// Cleans the process list form zombi processes that are completely done.
+  /// This actually just rleases one shared_ptr counter, so other
+  /// users are ok continuing to use the dead zombi
+  void VM::clean_processes(){
+    if (!running)
+      return;
+    // std::cerr<<"Dirty "<<processes.size()<<std::endl;
+    processes.erase(std::remove_if(processes.begin(), processes.end(), [](std::shared_ptr<process> &p){
+      return !p->running();
+    }), processes.end());
+    // std::cerr<<"Clean "<<processes.size()<<std::endl;
   }
 }
