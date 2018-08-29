@@ -8,17 +8,20 @@
 namespace opp{
   class exception : public std::exception {};
 
-  class bad_receiver : public opp::exception {
+  class process_exception : public opp::exception {
   public:
+    std::shared_ptr<opp::process> process;
+    process_exception(std::shared_ptr<opp::process> pr) : process(pr){
+      // print_backtrace();
+    };
     const char *what() const noexcept{
       return "Receive on wrong process. Only currently executing process can call receive.";
     }
   };
 
-  class process_exception : public opp::exception {
+  class bad_receiver : public opp::process_exception {
   public:
-    std::shared_ptr<opp::process> process;
-    process_exception(std::shared_ptr<opp::process> pr) : process(pr){
+    bad_receiver(std::shared_ptr<opp::process> pr) : process_exception(pr){
       // print_backtrace();
     };
     const char *what() const noexcept{
@@ -38,7 +41,12 @@ namespace opp{
 
   class process_exit : public opp::process_exception {
   public:
-    process_exit(std::shared_ptr<opp::process> pr) : process_exception(pr){};
+    int code; // 0 controlled
+    process_exit(std::shared_ptr<opp::process> pr, int _code) : process_exception(pr), code(_code) {
+      if (code!=0){
+        print_backtrace();
+      }
+    };
     const char *what() const noexcept{
       return "exit";
     }

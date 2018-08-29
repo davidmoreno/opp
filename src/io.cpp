@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include "io.hpp"
 #include "opp.hpp"
+#include "logger.hpp"
 
 namespace opp::io{
   struct print_msg{ std::string str; };

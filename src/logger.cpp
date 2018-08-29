@@ -79,6 +79,6 @@ namespace opp::logger{
   /// Blocks until this is processed
   void logger::flush(){
     send(flush_msg{this});
-    receive<flush_ready_msg>();
+    self()->receive<flush_ready_msg>();
   }
 }

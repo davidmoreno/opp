@@ -66,8 +66,8 @@ namespace serverboards{
         // data.running=false; // To stop on debug
       } catch (opp::process_exit &){
         OPP_INFO("Exit.");
-        opp::logger::flush();
-        exit(0);
+        return;
+        // opp::logger::flush();
       } catch (std::exception &e){
         fprintf(stderr, "Exception at serverboards::loop: %s.\n", e.what());
         exit(1);

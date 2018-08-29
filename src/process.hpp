@@ -91,7 +91,7 @@ namespace opp {
             messages.erase(msg);
             return ret;
           }
-          maybe_exit_or_timeout(msg);
+          maybe_exit_or_timeout(*msg);
         }
 
         // printf("%s: Wait for message1\n", name().c_str());
@@ -124,7 +124,7 @@ namespace opp {
             messages.erase(msg);
             return;
           }
-          maybe_exit_or_timeout(msg);
+          maybe_exit_or_timeout(*msg);
         }
 
         // printf("%s: Wait for message1\n", name().c_str());

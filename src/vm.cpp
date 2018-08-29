@@ -49,6 +49,12 @@ namespace opp{
 
   VM::~VM(){
     vm = nullptr;
+    std::cerr<<"Finishing the vm. Stopping all processes."<<std::endl;
+    std::unique_lock<std::mutex> lck(mutex);
+    for(auto pr: processes){
+      pr->_running = false;
+      pr->thread.join();
+    }
   }
 
   void VM::loop(){
@@ -69,15 +75,21 @@ namespace opp{
     pr->run();
   }
   void VM::stop(std::shared_ptr<process> pr){
+    std::unique_lock<std::mutex> lck(mutex);
     // std::unique_lock<std::mutex> lck(mutex);
     // processes.erase(pr);
-    fprintf(stderr, "REMOVE PROCESS\n");
+    auto pri = find(processes.begin(), processes.end(), pr);
+    if (pri == std::end(processes)){
+      fprintf(stderr, "Process not in vm: %d\n", pr->pid());
+      return;
+    }
+    processes.erase(pri);
 
     pr->_running = false;
     // Busy wait it to finish.
     pr->thread.join();
-
   }
+
   void VM::print_stats(){
     std::unique_lock<std::mutex> lck(mutex);
     std::ostringstream stats;

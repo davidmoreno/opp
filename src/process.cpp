@@ -15,8 +15,9 @@ namespace opp{
   };
 
   void process::maybe_exit_or_timeout(const std::any &msg){
+    // fprintf(stderr, "Maybe exit or timeout %s %s %s", msg.type().name(), typeid(exit_msg).name(), typeid(timeout_msg).name());
     if (msg.type() == typeid(exit_msg)){
-      throw opp::process_exit(std::any_cast<exit_msg>(msg).process);
+      throw opp::process_exit(std::any_cast<exit_msg>(msg).process, 1);
     }
     if (msg.type() == typeid(timeout_msg)){
       throw opp::process_timeout(std::any_cast<timeout_msg>(msg).process);
@@ -64,7 +65,7 @@ namespace opp{
 
   void process::send(std::any &&msg){
     if (!running())
-      throw opp::process_exit(shared_from_this());
+      throw opp::process_exit(shared_from_this(), 1);
     // printf("%s: Send %s\n", name().c_str(), s.name());
     std::unique_lock<std::mutex> lck(mtx);
     messages.push_back(msg);
@@ -85,13 +86,13 @@ namespace opp{
   }
 
   void process::throw_bad_receiver(){
-    throw opp::bad_receiver();
+    throw opp::bad_receiver(shared_from_this());
   }
   void process::throw_timeout(){
     throw opp::process_timeout(shared_from_this());
   }
   void process::throw_exit(){
-    throw opp::process_exit(shared_from_this());
+    throw opp::process_exit(shared_from_this(), 1);
   }
 
 }
