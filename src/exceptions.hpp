@@ -3,6 +3,7 @@
 #include <exception>
 #include <memory>
 #include "process.hpp"
+#include "string.hpp"
 #include "opp.hpp"
 
 namespace opp{
@@ -42,13 +43,15 @@ namespace opp{
   class process_exit : public opp::process_exception {
   public:
     int code; // 0 controlled
+    std::string description;
     process_exit(std::shared_ptr<opp::process> pr, int _code) : process_exception(pr), code(_code) {
       if (code!=0){
         print_backtrace();
       }
+      description = opp::concat("exit #", pr->pid(), "<", pr->name(), "> code: ", _code, " at #", self()->pid(), "<", self()->name(), ">");
     };
     const char *what() const noexcept{
-      return "exit";
+      return description.c_str();
     }
   };
 

@@ -53,25 +53,33 @@ namespace serverboards{
       return opp::utils::extract_keys(data.method_map);
     });
 
-    data.running=true;
-    OPP_DEBUG("Starting loop");
-    while (data.running){
-      try{
-        auto line = opp::io::stdin->readline();
-        auto req = json::parse(line);
-        process_request(std::move(req));
+    try{
+      data.running=true;
+      OPP_DEBUG("Starting loop");
+      while (data.running){
+        try{
+          auto line = opp::io::stdin->readline();
+          auto req = json::parse(line);
+          process_request(std::move(req));
 
-        opp::vm->print_stats();
-        // opp::io::stderr->println("Debug STOP");
-        // data.running=false; // To stop on debug
-      } catch (opp::process_exit &){
-        OPP_INFO("Exit.");
-        return;
-        // opp::logger::flush();
-      } catch (std::exception &e){
-        fprintf(stderr, "Exception at serverboards::loop: %s.\n", e.what());
-        exit(1);
+          opp::vm->print_stats();
+          // opp::io::stderr->println("Debug STOP");
+          // data.running=false; // To stop on debug
+        } catch (opp::process_exit &){
+          OPP_INFO("Exit.");
+          opp::logger::flush();
+          return;
+        } catch (std::exception &e){
+          fprintf(stderr, "Exception at serverboards::loop: %s.\n", e.what());
+          return;
+        } catch (...) {
+          fprintf(stderr, "Unhandled exception\n");
+          return;
+        }
       }
-    };
+    } catch (std::exception &e){
+      fprintf(stderr, "Exception at serverboards::loop: %s.\n", e.what());
+      return;
+    }
   }
 }

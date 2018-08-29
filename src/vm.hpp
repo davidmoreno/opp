@@ -14,6 +14,8 @@ namespace opp{
   public:
     VM();
     ~VM();
+    void stop();
+
     void loop();
     void loop_thread();
 

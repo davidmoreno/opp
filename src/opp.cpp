@@ -16,7 +16,7 @@ namespace opp{
   void stop(){
     if (!vm)
       throw opp::not_initialized();
-    delete vm;
+    vm->stop(); // it is a shared_ptr
   }
 
   // from https://stackoverflow.com/questions/3151779/best-way-to-invoke-gdb-from-inside-program-to-print-its-stacktrace/4611112#4611112
@@ -66,5 +66,6 @@ namespace opp{
         fprintf(stderr, "%s\n", abi::__cxa_demangle(temp, temp2, &siz, &st));
       }
     }
+    free(messages);
   }
 }

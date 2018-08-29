@@ -14,12 +14,16 @@ namespace opp{
     throw opp::not_implemented();
   };
 
-  void process::maybe_exit_or_timeout(const std::any &msg){
+  void process::maybe_exit_or_timeout(std::vector<std::any>::iterator &msgI){
     // fprintf(stderr, "Maybe exit or timeout %s %s %s", msg.type().name(), typeid(exit_msg).name(), typeid(timeout_msg).name());
+    std::any &msg = *msgI;
     if (msg.type() == typeid(exit_msg)){
-      throw opp::process_exit(std::any_cast<exit_msg>(msg).process, 1);
+      messages.erase(msgI);
+      auto m = std::any_cast<exit_msg>(msg);
+      throw opp::process_exit(m.process, m.code);
     }
     if (msg.type() == typeid(timeout_msg)){
+      messages.erase(msgI);
       throw opp::process_timeout(std::any_cast<timeout_msg>(msg).process);
     }
   }
@@ -42,12 +46,14 @@ namespace opp{
       // here there can be a race between create the object, create the thread the shared_ptr... and it might not be ready yet.
       vm->self(shared_from_this());
 
-
       _inloop = true;
       this->loop();
       // printf("%s: End\n", this->name().c_str());
+    } catch (opp::exception &e){
+      fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
+      print_backtrace();
     } catch (std::exception &e){
-      fprintf(stderr, "\n%s: Exit process. Exception: %s.\n", this->name().c_str(), e.what());
+      fprintf(stderr, "\n%s: Exit process. C++ Exception: %s.\n", this->name().c_str(), e.what());
       print_backtrace();
     } catch (...) {
       fprintf(stderr, "\n%s: Exit process. Unknown exception.\n", this->name().c_str());

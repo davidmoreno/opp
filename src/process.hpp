@@ -19,7 +19,7 @@ namespace opp {
   class VM;
   class process;
 
-  struct exit_msg{ std::shared_ptr<opp::process> process; };
+  struct exit_msg{ std::shared_ptr<opp::process> process; int code; };
   struct timeout_msg{ std::shared_ptr<opp::process> process; };
   struct down_msg{ std::shared_ptr<opp::process> process; };
 
@@ -91,7 +91,7 @@ namespace opp {
             messages.erase(msg);
             return ret;
           }
-          maybe_exit_or_timeout(*msg);
+          maybe_exit_or_timeout(msg);
         }
 
         // printf("%s: Wait for message1\n", name().c_str());
@@ -116,7 +116,6 @@ namespace opp {
       auto until = std::chrono::system_clock::now() + timeout;
 
       while(true){
-        // printf("%s: receive 1\n", _name.c_str());
         std::unique_lock<std::mutex> lck(mtx);
         auto endI = messages.end();
         for(auto msg=messages.begin();msg!=endI;++msg){
@@ -124,7 +123,7 @@ namespace opp {
             messages.erase(msg);
             return;
           }
-          maybe_exit_or_timeout(*msg);
+          maybe_exit_or_timeout(msg);
         }
 
         // printf("%s: Wait for message1\n", name().c_str());
@@ -153,7 +152,7 @@ namespace opp {
       return m;
     }
   private:
-    void maybe_exit_or_timeout(const std::any &);
+    void maybe_exit_or_timeout(std::vector<std::any>::iterator &);
     void base_loop();
 
     // I dont know about the exceptions here, as they reference the same class. Need to do some tricks.

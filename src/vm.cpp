@@ -21,7 +21,7 @@ namespace opp{
     main_process() : process("main"){};
     virtual void loop(){
       while(running()){
-        sleep(1000);
+        sleep(1);
       }
     }
   };
@@ -36,25 +36,31 @@ namespace opp{
     }
     vm = this;
 
+    _self = opp::start<main_process>();
+
     // Start some required classes
     opp::io::stdin = opp::start<opp::io::file>("stdin", 0);
     opp::io::stdout = opp::start<opp::io::file>("stdout", 1);
     opp::io::stderr = opp::start<opp::io::file>("stderr", 2);
 
     opp::logger::__logger = opp::start<opp::logger::logger>();
-
-    // And self. No run.
-    _self = opp::start<main_process>();
   }
 
   VM::~VM(){
-    vm = nullptr;
+  }
+
+  void VM::stop(){
     std::cerr<<"Finishing the vm. Stopping all processes."<<std::endl;
     std::unique_lock<std::mutex> lck(mutex);
     for(auto pr: processes){
-      pr->_running = false;
-      pr->thread.join();
+      if (pr->running()){
+        std::cerr<<"Stopping #"<<pr->pid()<<" <"<<pr->name()<<">"<<std::endl;
+        pr->_running = false;
+        pr->message_signal.notify_all();
+        pr->thread.join();
+      }
     }
+    processes.clear();
   }
 
   void VM::loop(){

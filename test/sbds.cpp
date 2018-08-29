@@ -10,5 +10,6 @@ int main(int argc, char **argv){
 
   serverboards::loop();
 
+  opp::stop();
   printf("EXIT!! end!!\n");
 }
