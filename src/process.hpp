@@ -18,9 +18,10 @@
 namespace opp {
   class vm;
 
-  extern symbol EXIT;
-  extern symbol TIMEOUT;
-  extern symbol DOWN;
+  struct exit_msg{ opp::process *process; };
+  struct timeout_msg{ opp::process *process; };
+  struct down_msg{ opp::process *process; };
+
 
   class process{
     std::string _name;
@@ -85,6 +86,7 @@ namespace opp {
             messages.erase(msg);
             return ret;
           }
+          maybe_exit_or_timeout(msg);
         }
 
         // printf("%s: Wait for message1\n", name().c_str());
@@ -118,6 +120,7 @@ namespace opp {
             messages.erase(msg);
             return msg->first;
           }
+          maybe_exit_or_timeout(msg);
         }
 
         // printf("%s: Wait for message1\n", name().c_str());
@@ -145,5 +148,7 @@ namespace opp {
       m = m || match(msg, fb);
       return m;
     }
+  private:
+    void maybe_exit_or_timeout(const std::any &);
   };
 }

@@ -40,7 +40,7 @@ namespace opp::io{
         ssize_t n = read(fd, &c, 1);
         if (n!=1){
           fprintf(::stderr, "stdin closed\n");
-          msg.from->send(EXIT, this);
+          msg.from->send(PRINT, exit_msg{this});
           throw opp::io::read_error();
         }
         ret+=c;
