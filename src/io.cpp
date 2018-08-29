@@ -5,12 +5,12 @@
 
 namespace opp::io{
   struct print_msg{ std::string str; };
-  struct readline_msg{ opp::process *from; };
+  struct readline_msg{ std::shared_ptr<opp::process> from; };
   struct readline_result_msg{ std::string string; };
 
-  file *stdin = nullptr;
-  file *stdout = nullptr;
-  file *stderr = nullptr;
+  std::shared_ptr<file> stdin;
+  std::shared_ptr<file> stdout;
+  std::shared_ptr<file> stderr;
 
   file::file(std::string &&name, int fd) : process(std::string(name)), filename(name), fd(fd){
   }
@@ -36,7 +36,7 @@ namespace opp::io{
         ssize_t n = read(fd, &c, 1);
         if (n!=1){
           fprintf(::stderr, "stdin closed\n");
-          msg.from->send(exit_msg{this});
+          msg.from->send(exit_msg{shared_from_this()});
           throw opp::io::read_error();
         }
         ret+=c;

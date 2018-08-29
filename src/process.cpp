@@ -4,6 +4,7 @@
 #include "process.hpp"
 #include "opp.hpp"
 #include "vm.hpp"
+#include "exceptions.hpp"
 
 namespace opp{
   std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
@@ -14,6 +15,10 @@ namespace opp{
     backtrace_symbols_fd(array, size, 2);
     fprintf(stderr, "\n");
   }
+
+  void process::loop(){
+    throw opp::not_implemented();
+  };
 
   void process::maybe_exit_or_timeout(const std::any &msg){
     if (msg.type() == typeid(exit_msg)){
@@ -26,30 +31,38 @@ namespace opp{
 
   process::process(std::string &&name) : _name(name){
     // printf("%s: New process %p\n", _name.c_str(), this);
+    _running=false;
+  }
+
+  void process::run(){
     _running=true;
+    thread = std::move(std::thread([this](){ this-> base_loop(); }));
+  }
 
-    thread = std::move(std::thread([this]{
-      try{
-        // printf("%s: Start\n", this->name().c_str());
-        vm->self(this);
-        _inloop = true;
-        this->loop();
-        // printf("%s: End\n", this->name().c_str());
-      } catch (std::exception &e){
-        fprintf(stderr, "%s: Exit process. Exception: %s.\n", this->name().c_str(), e.what());
-        print_backtrace();
-      } catch (...) {
-        fprintf(stderr, "%s: Exit process. Unknown exception.\n", this->name().c_str());
-        print_backtrace();
-      }
-      _inloop = false;
+  void process::base_loop(){
+    try{
+      // printf("%s: Start\n", this->name().c_str());
 
-      for(auto pr: monitored_by){
-        pr->send(down_msg{this});
-      }
-    }));
+      // here there can be a race between create the object, create the thread the shared_ptr... and it might not be ready yet.
+      vm->add_process(shared_from_this());
+      vm->self(shared_from_this());
 
-    vm->add_process(this);
+
+      _inloop = true;
+      this->loop();
+      // printf("%s: End\n", this->name().c_str());
+    } catch (std::exception &e){
+      fprintf(stderr, "%s: Exit process. Exception: %s.\n", this->name().c_str(), e.what());
+      print_backtrace();
+    } catch (...) {
+      fprintf(stderr, "%s: Exit process. Unknown exception.\n", this->name().c_str());
+      print_backtrace();
+    }
+    _inloop = false;
+
+    for(auto pr: monitored_by){
+      pr->send(down_msg{shared_from_this()});
+    }
   }
 
   process::~process(){
@@ -57,13 +70,13 @@ namespace opp{
     exit();
     while(_inloop){ // FIXME spinning to get stop
     }
-    vm->remove_process(this);
+    vm->remove_process(shared_from_this());
     thread.join();
   }
 
   void process::send(std::any &&msg){
     if (!running())
-      throw opp::process_exit(this);
+      throw opp::process_exit(shared_from_this());
     // printf("%s: Send %s\n", name().c_str(), s.name());
     std::unique_lock<std::mutex> lck(mtx);
     messages.push_back(msg);
@@ -73,7 +86,7 @@ namespace opp{
   void process::exit(){
     printf("%s: exit\n", _name.c_str());
     _running = false;
-    send(exit_msg{this});
+    send(exit_msg{shared_from_this()});
   }
 
   void process::monitor(){
@@ -83,4 +96,15 @@ namespace opp{
   void process::demonitor(){
     monitored_by.insert(self());
   }
+
+  void process::throw_bad_receiver(){
+    throw opp::bad_receiver();
+  }
+  void process::throw_timeout(){
+    throw opp::process_timeout(shared_from_this());
+  }
+  void process::throw_exit(){
+    throw opp::process_exit(shared_from_this());
+  }
+
 }

@@ -12,18 +12,19 @@
 #include <condition_variable>
 #include <functional>
 #include <iostream>
-#include "symbol.hpp"
+#include <memory>
 #include "opp.hpp"
 
 namespace opp {
   class vm;
+  class process;
 
-  struct exit_msg{ opp::process *process; };
-  struct timeout_msg{ opp::process *process; };
-  struct down_msg{ opp::process *process; };
+  struct exit_msg{ std::shared_ptr<opp::process> process; };
+  struct timeout_msg{ std::shared_ptr<opp::process> process; };
+  struct down_msg{ std::shared_ptr<opp::process> process; };
 
 
-  class process{
+  class process : public std::enable_shared_from_this<process>{
     std::string _name;
     std::atomic<bool> _running;
     std::atomic<bool> _inloop;
@@ -35,7 +36,7 @@ namespace opp {
     std::condition_variable message_signal;
 
     // These will receive "{DOWN, process}" when process stop running
-    std::set<process *> monitored_by;
+    std::set<std::shared_ptr<process>> monitored_by;
     friend class vm;
   public:
     static std::chrono::seconds FOREVER;
@@ -47,10 +48,12 @@ namespace opp {
 
     const std::string &name(){ return _name; };
 
+    /// Must be called to really start runnig the process. This is required for shared_ptrto work properly.
+    /// It is virtual, to be able to add code that uses shared_from_this, but should call process::run() at end
+    virtual void run();
+
     // First function to be called. Can not be on constructor as it runs on the callers context.
-    virtual void loop(){
-      throw opp::not_implemented();
-    };
+    virtual void loop();
 
     // Sends a message to this process
     void send(std::any &&msg);
@@ -71,8 +74,8 @@ namespace opp {
 
     template<typename A>
     A receive(const std::chrono::seconds &timeout=std::chrono::seconds(5)){
-      if (self() != this)
-        throw bad_receiver();
+      if (self().get() != this)
+        throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
 
@@ -92,10 +95,9 @@ namespace opp {
         // printf("%s: Wait for message1\n", name().c_str());
         auto to_ = message_signal.wait_until(lck, until);
         if (to_ == std::cv_status::timeout)
-          throw process_timeout(this);
+          throw_timeout();
         if (!running())
-          throw process_exit(this);
-
+          throw_exit();
       }
 
     }
@@ -106,8 +108,8 @@ namespace opp {
                 std::function<void(const B &)> fb,
                 const std::chrono::seconds &timeout=std::chrono::seconds(5)
               ){
-      if (self() != this)
-        throw bad_receiver();
+      if (self().get() != this)
+        throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
 
@@ -126,9 +128,9 @@ namespace opp {
         // printf("%s: Wait for message1\n", name().c_str());
         auto to_ = message_signal.wait_until(lck, until);
         if (to_ == std::cv_status::timeout)
-          throw process_timeout(this);
+          throw_timeout();
         if (!running())
-          throw process_exit(this);
+          throw_exit();
 
       }
     }
@@ -150,5 +152,11 @@ namespace opp {
     }
   private:
     void maybe_exit_or_timeout(const std::any &);
+    void base_loop();
+
+    // I dont know about the exceptions here, as they reference the same class. Need to do some tricks.
+    void throw_bad_receiver();
+    void throw_timeout();
+    void throw_exit();
   };
 }

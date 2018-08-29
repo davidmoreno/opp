@@ -3,7 +3,7 @@
 #include "logger.hpp"
 
 namespace opp::logger{
-  logger *__logger = nullptr;
+  std::shared_ptr<logger> __logger = nullptr;
 
   struct log_msg{
     const char *filename;
@@ -17,10 +17,14 @@ namespace opp::logger{
   struct flush_ready_msg{};
 
   logger::logger(){
-    __logger = this;
   }
   logger::~logger(){
     __logger = nullptr;
+  }
+
+  void logger::run(){
+    __logger = this->shared_from_this();
+    process::run();
   }
 
   void logger::loop(){

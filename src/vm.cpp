@@ -26,7 +26,7 @@ namespace opp{
 
 
   VM *vm = nullptr;
-  static thread_local process *_self=nullptr;
+  static thread_local std::shared_ptr<process> _self;
 
   VM::VM(){
     if (vm){
@@ -35,12 +35,17 @@ namespace opp{
     vm = this;
 
     // Start some required classes
-    opp::io::stdin = new io::file("stdin", 0);
-    opp::io::stdout = new io::file("stdout", 1);
-    opp::io::stderr = new io::file("stderr", 2);
+    opp::io::stdin = std::make_shared<opp::io::file>("stdin", 0);
+    opp::io::stdin->run();
+
+    opp::io::stdout = std::make_shared<opp::io::file>("stdout", 1);
+    opp::io::stdout->run();
+
+    opp::io::stderr = std::make_shared<opp::io::file>("stderr", 2);
+    opp::io::stderr->run();
 
     // And self
-    _self = new MainProcess();
+    _self = std::make_shared<MainProcess>();
   }
 
   VM::~VM(){
@@ -51,21 +56,22 @@ namespace opp{
 
   }
 
-  process *VM::self(){
+  std::shared_ptr<process> VM::self(){
     return _self;
   }
 
-  void VM::self(process *self){
+  void VM::self(std::shared_ptr<process> self){
     _self = self;
   }
 
-  void VM::add_process(process *pr){
+  void VM::add_process(std::weak_ptr<process> pr){
     std::unique_lock<std::mutex> lck(mutex);
-    processes.insert(pr);
+    processes.push_back(pr);
   }
-  void VM::remove_process(process *pr){
-    std::unique_lock<std::mutex> lck(mutex);
-    processes.erase(pr);
+  void VM::remove_process(std::weak_ptr<process> pr){
+    // std::unique_lock<std::mutex> lck(mutex);
+    // processes.erase(pr);
+    fprintf(stderr, "REMOVE PROCESS\n");
   }
   void VM::print_stats(){
     std::unique_lock<std::mutex> lck(mutex);
@@ -75,7 +81,12 @@ namespace opp{
     stats<<"processes: "<<std::endl;
 
     for(const auto &p: processes){
-      stats<<"  -name: "<<p->name()<<std::endl;
+      try{
+        auto sp = std::shared_ptr(p);
+        stats<<"  -name: "<<sp->name()<<std::endl;
+      } catch (std::bad_weak_ptr &e) {
+        stats<<"  -name: (removed)"<<std::endl;
+      }
     }
 
     io::stderr->println(term::color(stats.str(), term::WHITE, term::BLUE));

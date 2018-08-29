@@ -1,6 +1,7 @@
 #pragma once
 
 #include "process.hpp"
+#include "exceptions.hpp"
 #include "string.hpp"
 
 namespace opp::io{
@@ -16,7 +17,7 @@ namespace opp::io{
     }
   };
 
-  class file : opp::process{
+  class file : public opp::process{
     std::string filename;
     int fd;
   public:
@@ -41,7 +42,7 @@ namespace opp::io{
   };
 
 
-  extern file *stdin;
-  extern file *stdout;
-  extern file *stderr;
+  extern std::shared_ptr<file> stdin;
+  extern std::shared_ptr<file> stdout;
+  extern std::shared_ptr<file> stderr;
 };

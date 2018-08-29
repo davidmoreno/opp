@@ -1,9 +1,10 @@
 #include <thread>
 #include "process.hpp"
 #include "vm.hpp"
+#include "exceptions.hpp"
 
 namespace opp{
-  process *self(){
+  std::shared_ptr<process> self(){
     return vm->self();
   }
 

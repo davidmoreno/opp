@@ -35,7 +35,7 @@ namespace serverboards{
       return;
     }
     // Starts as new task, to do not block here.
-    opp::Task::start([func, req]{
+    opp::task::start([func, req]{
       try{
         auto result = func->second(req.at("params"));
         json ret = {{"id", req["id"]}, {"result", result}};
@@ -49,7 +49,8 @@ namespace serverboards{
   }
 
   void loop(){
-    opp::logger::logger logger;
+    auto logger = std::make_shared<opp::logger::logger>();
+    logger->run();
 
     rpc_method("dir", [](const json &) -> json{
       return opp::utils::extract_keys(data.method_map);
@@ -68,7 +69,7 @@ namespace serverboards{
         // data.running=false; // To stop on debug
       } catch (opp::process_exit &){
         OPP_INFO("Exit.");
-        logger.flush();
+        logger->flush();
         exit(0);
       } catch (std::exception &e){
         fprintf(stderr, "Exception at serverboards::loop: %s.\n", e.what());

@@ -1,16 +1,17 @@
 #include "task.hpp"
 #include "logger.hpp"
 
-namespace opp::Task{
+namespace opp::task{
 
-  process *start(std::function<void(void)> &&fn){
-    auto task = new Task(std::move(fn));
+  std::shared_ptr<task> start(std::function<void(void)> &&fn){
+    auto task = std::make_shared<opp::task::task>(std::move(fn));
+    task->run();
     return task;
   }
 
-  Task::Task(std::function<void(void)> &&_fn) : fn(_fn){}
+  task::task(std::function<void(void)> &&_fn) : fn(_fn){}
 
-  void Task::loop(){
+  void task::loop(){
     OPP_DEBUG("Start task");
     fn();
     OPP_DEBUG("End task");

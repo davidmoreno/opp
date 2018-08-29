@@ -12,7 +12,7 @@
 namespace opp::logger{
   class logger;
 
-  extern logger *__logger;
+  extern std::shared_ptr<logger> __logger;
 
   enum LogLevel{
     DEBUG,
@@ -26,7 +26,12 @@ namespace opp::logger{
     logger();
     ~logger();
 
+    virtual void run();
     virtual void loop();
+
+    std::shared_ptr<logger> shared_from_this(){
+        return std::static_pointer_cast<logger>(process::shared_from_this());
+    }
 
     void log(const char *filename, int lineno, LogLevel loglevel, const std::string &msg);
     void flush();
