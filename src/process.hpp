@@ -16,7 +16,7 @@
 #include "opp.hpp"
 
 namespace opp {
-  class vm;
+  class VM;
   class process;
 
   struct exit_msg{ std::shared_ptr<opp::process> process; };
@@ -28,6 +28,7 @@ namespace opp {
     std::string _name;
     std::atomic<bool> _running;
     std::atomic<bool> _inloop;
+    int _pid;
 
     std::mutex mtx;
     std::thread thread;
@@ -37,7 +38,7 @@ namespace opp {
 
     // These will receive "{DOWN, process}" when process stop running
     std::set<std::shared_ptr<process>> monitored_by;
-    friend class vm;
+    friend class opp::VM;
   public:
     static std::chrono::seconds FOREVER;
 
@@ -47,6 +48,7 @@ namespace opp {
     virtual ~process();
 
     const std::string &name(){ return _name; };
+    int pid(){ return _pid; }
 
     /// Must be called to really start runnig the process. This is required for shared_ptrto work properly.
     /// It is virtual, to be able to add code that uses shared_from_this, but should call process::run() at end
@@ -57,7 +59,7 @@ namespace opp {
 
     // Sends a message to this process
     void send(std::any &&msg);
-    void exit();
+    void stop();
     bool running(){ return _running; }
     void monitor();
     void demonitor();

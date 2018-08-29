@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "vm.hpp"
 
 namespace opp{
   class process;
@@ -12,7 +13,7 @@ namespace opp{
   template<typename A, typename... Args>
   std::shared_ptr<A> start(Args&&... args){
     auto pr = std::make_shared<A>(std::forward<Args>(args)...);
-    pr->run();
+    vm->start(pr);
     return pr;
   }
 

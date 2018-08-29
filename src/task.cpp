@@ -4,8 +4,7 @@
 namespace opp::task{
 
   std::shared_ptr<task> start(std::function<void(void)> &&fn){
-    auto task = std::make_shared<opp::task::task>(std::move(fn));
-    task->run();
+    auto task = opp::start<opp::task::task>(std::move(fn));
     return task;
   }
 

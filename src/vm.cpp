@@ -44,7 +44,7 @@ namespace opp{
     opp::logger::__logger = opp::start<opp::logger::logger>();
 
     // And self. No run.
-    _self = start<main_process>();
+    _self = opp::start<main_process>();
   }
 
   VM::~VM(){
@@ -63,14 +63,20 @@ namespace opp{
     _self = self;
   }
 
-  void VM::add_process(std::weak_ptr<process> pr){
+  void VM::start(std::shared_ptr<process> pr){
     std::unique_lock<std::mutex> lck(mutex);
     processes.push_back(pr);
+    pr->run();
   }
-  void VM::remove_process(std::weak_ptr<process> pr){
+  void VM::stop(std::shared_ptr<process> pr){
     // std::unique_lock<std::mutex> lck(mutex);
     // processes.erase(pr);
     fprintf(stderr, "REMOVE PROCESS\n");
+
+    pr->_running = false;
+    // Busy wait it to finish.
+    pr->thread.join();
+
   }
   void VM::print_stats(){
     std::unique_lock<std::mutex> lck(mutex);

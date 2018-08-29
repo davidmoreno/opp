@@ -10,7 +10,7 @@ namespace opp{
 
   class VM{
     std::mutex mutex;
-    std::vector<std::weak_ptr<process>> processes;
+    std::vector<std::shared_ptr<process>> processes;
   public:
     VM();
     ~VM();
@@ -20,8 +20,8 @@ namespace opp{
     std::shared_ptr<process> self();
     void self(std::shared_ptr<process> pr);
 
-    void add_process(std::weak_ptr<process> pr);
-    void remove_process(std::weak_ptr<process> pr);
+    void start(std::shared_ptr<process> pr);
+    void stop(std::shared_ptr<process> pr);
 
     void print_stats();
   };

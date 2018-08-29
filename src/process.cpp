@@ -8,6 +8,7 @@
 
 namespace opp{
   std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
+  static std::atomic<long> pidcount = 0;
 
   void process::loop(){
     throw opp::not_implemented();
@@ -25,6 +26,7 @@ namespace opp{
   process::process(std::string &&name) : _name(name){
     // printf("%s: New process %p\n", _name.c_str(), this);
     _running=false;
+    _pid = ++pidcount;
   }
 
   void process::run(){
@@ -37,7 +39,6 @@ namespace opp{
       // printf("%s: Start\n", this->name().c_str());
 
       // here there can be a race between create the object, create the thread the shared_ptr... and it might not be ready yet.
-      vm->add_process(shared_from_this());
       vm->self(shared_from_this());
 
 
@@ -59,12 +60,6 @@ namespace opp{
   }
 
   process::~process(){
-    std::cerr<<std::this_thread::get_id()<<" "<<_name<<": me "<<this<<std::endl;
-    std::cerr<<thread.get_id()<<" "<<_name<<": ~process "<<this<<std::endl;
-    exit();
-    while(_inloop){ // FIXME spinning to get stop
-    }
-    vm->remove_process(weak_from_this());
   }
 
   void process::send(std::any &&msg){
@@ -76,9 +71,9 @@ namespace opp{
     message_signal.notify_all();
   }
 
-  void process::exit(){
-    printf("%s: exit\n", _name.c_str());
-    _running = false;
+  void process::stop(){
+    printf("%s: stop\n", _name.c_str());
+    vm->stop(shared_from_this());
   }
 
   void process::monitor(){
