@@ -119,7 +119,9 @@ namespace opp {
         std::unique_lock<std::mutex> lck(mtx);
         auto endI = messages.end();
         for(auto msg=messages.begin();msg!=endI;++msg){
-          if (match<A,B>(*msg, fa,fb)) {
+          bool m = match<A, B>(*msg, fa,fb);
+
+          if (m) {
             messages.erase(msg);
             return;
           }

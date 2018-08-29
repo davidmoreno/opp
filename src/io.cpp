@@ -3,6 +3,7 @@
 #include "io.hpp"
 #include "opp.hpp"
 #include "logger.hpp"
+#include "exceptions.hpp"
 
 namespace opp::io{
   struct print_msg{ std::string str; };
@@ -38,7 +39,7 @@ namespace opp::io{
         if (n!=1){
           fprintf(::stderr, "stdin closed\n");
           msg.from->send(exit_msg{shared_from_this()});
-          throw opp::io::read_error();
+          throw opp::process_exit(shared_from_this(), 0);
         }
         ret+=c;
       }while(c!='\n');
