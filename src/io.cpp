@@ -8,6 +8,9 @@ namespace opp::io{
   static opp::symbol READLINE("readline");
   static opp::symbol READLINE_RESULT("readline_result");
 
+  struct msg_print{ std::string str; };
+  struct msg_readline{ opp::process *from; };
+
   file *stdin = nullptr;
   file *stdout = nullptr;
   file *stderr = nullptr;
@@ -22,44 +25,51 @@ namespace opp::io{
   void file::loop(){
     // printf("process file %s %d\n", filename.c_str(), fd);
     // Build once, use man times
-    std::map<symbol, std::function<void(const std::any &)>> _case = {
-      {PRINT, [this](const std::any &args){
-        // printf("Resolved print %s %d\n", filename.c_str(), fd);
-        auto str = std::any_cast<std::string>(args);
-        auto wrote = write(this->fd, str.c_str(), str.size());
-        if ((wrote < 0) || (unsigned(wrote) < str.size())){
-          throw write_error();
+    std::function<void(const msg_print &)> printfn = [this](const msg_print &msg){
+      auto str = msg.str;
+      auto wrote = write(this->fd, str.c_str(), str.size());
+      if ((wrote < 0) || (unsigned(wrote) < str.size())){
+        throw write_error();
+      }
+    };
+    std::function<void(const msg_readline &)> readlinefn = [this](const msg_readline &msg){
+      std::string ret="";
+      char c;
+      do{
+        ssize_t n = read(fd, &c, 1);
+        if (n!=1){
+          fprintf(::stderr, "stdin closed\n");
+          msg.from->send(EXIT, this);
+          throw opp::io::read_error();
         }
-      }},
-      {READLINE, [this](const std::any &args){
-        auto from = std::any_cast<process*>(args);
-        // printf("%s: Answer for %s\n", name().c_str(), from->name().c_str());
-        std::string ret="";
-        char c;
-        do{
-          ssize_t n = read(fd, &c, 1);
-          if (n!=1){
-            fprintf(::stderr, "stdin closed\n");
-            from->send(EXIT, this);
-            throw opp::io::read_error();
-          }
-          ret+=c;
-        }while(c!='\n');
-        from->send(READLINE_RESULT, ret);
-      }}
+        ret+=c;
+      }while(c!='\n');
+      msg.from->send(READLINE_RESULT, ret);
     };
 
+    // std::map<symbol, std::function<void(const std::any &)>> _case = {
+    //   {PRINT, [&printfn](const std::any &args){
+    //     auto msg = std::any_cast<msg_print>(args);
+    //     printfn(msg);;
+    //   }},
+    //   {READLINE, [&readlinefn](const std::any &args){
+    //     auto msg = std::any_cast<msg_readline>(args);
+    //     readlinefn(msg);
+    //     // printf("%s: Answer for %s\n", name().c_str(), from->name().c_str());
+    //   }}
+    // };
+
     while(true){ // This will exit because of an exception when closed
-      receive(_case, FOREVER);
+      receive<msg_print, msg_readline>(printfn, readlinefn, FOREVER);
     }
   }
 
   void file::print_(std::string &&str){
-    send(PRINT, str);
+    send(PRINT, msg_print{str});
   }
 
   std::string file::readline(){
-    send(READLINE, {opp::self()});
+    send(READLINE, msg_readline{opp::self()});
     auto res = opp::self()->receive(READLINE_RESULT, process::FOREVER);
     std::string str = std::any_cast<std::string>(res);
     return str;

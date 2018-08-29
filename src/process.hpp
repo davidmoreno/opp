@@ -11,6 +11,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <functional>
+#include <iostream>
 #include "symbol.hpp"
 #include "opp.hpp"
 
@@ -57,6 +58,54 @@ namespace opp {
     void monitor();
     void demonitor();
 
+
+    template<typename A, typename B>
+    symbol receive(
+                std::function<void(const A &)> &fa,
+                std::function<void(const B &)> &fb,
+                const std::chrono::seconds &timeout=std::chrono::seconds(5)
+              ){
+      if (self() != this)
+        throw bad_receiver();
+
+      auto until = std::chrono::system_clock::now() + timeout;
+
+      while(true){
+        // printf("%s: receive 1\n", _name.c_str());
+        std::unique_lock<std::mutex> lck(mtx);
+        auto endI = messages.end();
+        for(auto msg=messages.begin();msg!=endI;++msg){
+          if (match<A,B>(msg->second, fa,fb)) {
+            messages.erase(msg);
+            return msg->first;
+          }
+        }
+
+        // printf("%s: Wait for message1\n", name().c_str());
+        auto to_ = message_signal.wait_until(lck, until);
+        if (to_ == std::cv_status::timeout)
+          throw process_timeout(this);
+        if (!running())
+          throw process_exit(this);
+
+      }
+    }
+
+    template<typename A>
+    bool match(const std::any &msg, std::function<void(const A &)> &fa){
+      if (msg.type() == typeid(A)){
+        fa(std::any_cast<A>(msg));
+        return true;
+      }
+      return false;
+    }
+    template<typename A, typename B>
+    bool match(const std::any &msg, std::function<void(const A &)> &fa, std::function<void(const B &)> &fb){
+      bool m;
+      m = match(msg, fa);
+      m = m || match(msg, fb);
+      return m;
+    }
 
     // FIXME. This is the lazy wait. On all send will check the full queue.
     // The nice way would be on each receive first check the message queue, and
