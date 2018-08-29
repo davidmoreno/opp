@@ -11,12 +11,14 @@ namespace opp{
   }
 
   void start(){
-    new VM();
+    vm = std::make_shared<VM>();
+    vm->start();
   }
   void stop(){
     if (!vm)
       throw opp::not_initialized();
-    vm->stop(); // it is a shared_ptr
+    vm->stop();
+    vm.reset();
   }
 
   // from https://stackoverflow.com/questions/3151779/best-way-to-invoke-gdb-from-inside-program-to-print-its-stacktrace/4611112#4611112

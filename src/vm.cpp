@@ -27,15 +27,18 @@ namespace opp{
   };
 
 
-  VM *vm = nullptr;
+  std::shared_ptr<opp::VM> vm = nullptr;
   static thread_local std::shared_ptr<process> _self;
 
   VM::VM(){
-    if (vm){
-      throw opp::already_initialized();
-    }
-    vm = this;
+  }
 
+
+  VM::~VM(){
+  }
+
+
+  void VM::start(){
     _self = opp::start<main_process>();
 
     // Start some required classes
@@ -44,9 +47,6 @@ namespace opp{
     opp::io::stderr = opp::start<opp::io::file>("stderr", 2);
 
     opp::logger::__logger = opp::start<opp::logger::logger>();
-  }
-
-  VM::~VM(){
   }
 
   void VM::stop(){
@@ -61,6 +61,7 @@ namespace opp{
       }
     }
     processes.clear();
+    // std::cerr<<"VM left "<<vm.use_count()<<std::endl;
   }
 
   void VM::loop(){

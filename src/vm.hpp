@@ -14,6 +14,7 @@ namespace opp{
   public:
     VM();
     ~VM();
+    void start();
     void stop();
 
     void loop();
@@ -28,5 +29,5 @@ namespace opp{
     void print_stats();
   };
 
-  extern VM *vm;
+  extern std::shared_ptr<VM> vm;
 }
