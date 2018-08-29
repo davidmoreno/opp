@@ -4,10 +4,6 @@
 #include "opp.hpp"
 
 namespace opp::io{
-  static opp::symbol PRINT("print");
-  static opp::symbol READLINE("readline");
-  static opp::symbol READLINE_RESULT("readline_result");
-
   struct print_msg{ std::string str; };
   struct readline_msg{ opp::process *from; };
   struct readline_result_msg{ std::string string; };

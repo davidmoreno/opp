@@ -4,9 +4,6 @@
 
 namespace opp::logger{
   logger *__logger = nullptr;
-  static symbol LOG("log");
-  static symbol FLUSH("flush");
-  static symbol FLUSH_READY("flush_ready");
 
   struct log_msg{
     const char *filename;

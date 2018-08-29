@@ -6,9 +6,6 @@
 #include "vm.hpp"
 
 namespace opp{
-  symbol EXIT("exit");
-  symbol DOWN("down");
-
   std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
 
   static void print_backtrace(){
