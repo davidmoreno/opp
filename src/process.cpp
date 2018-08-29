@@ -48,7 +48,7 @@ namespace opp{
       _inloop = false;
 
       for(auto pr: monitored_by){
-        pr->send(DOWN, {this});
+        pr->send(down_msg{this});
       }
     }));
 
@@ -64,7 +64,7 @@ namespace opp{
     thread.join();
   }
 
-  void process::send(const symbol &s, std::any &&msg){
+  void process::send(std::any &&msg){
     if (!running())
       throw opp::process_exit(this);
     // printf("%s: Send %s\n", name().c_str(), s.name());
@@ -76,7 +76,7 @@ namespace opp{
   void process::exit(){
     printf("%s: exit\n", _name.c_str());
     _running = false;
-    send(EXIT, exit_msg{this});
+    send(exit_msg{this});
   }
 
   void process::monitor(){

@@ -63,18 +63,18 @@ namespace opp::logger{
           ); //term::color("msg"), term::RED);
         }),
         std::function<void(const flush_msg&)>([](const flush_msg &pr){
-          pr.process->send(FLUSH_READY, flush_ready_msg{});
+          pr.process->send(flush_ready_msg{});
         })
       );
     }
   }
 
   void logger::log(const char *filename, int lineno, LogLevel loglevel, const std::string &msg){
-    send(LOG, log_msg{filename, lineno, loglevel, msg});
+    send(log_msg{filename, lineno, loglevel, msg});
   }
   /// Blocks until this is processed
   void logger::flush(){
-    send(FLUSH, flush_msg{this});
+    send(flush_msg{this});
     receive<flush_ready_msg>();
   }
 }

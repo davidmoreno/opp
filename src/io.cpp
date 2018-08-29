@@ -40,12 +40,12 @@ namespace opp::io{
         ssize_t n = read(fd, &c, 1);
         if (n!=1){
           fprintf(::stderr, "stdin closed\n");
-          msg.from->send(PRINT, exit_msg{this});
+          msg.from->send(exit_msg{this});
           throw opp::io::read_error();
         }
         ret+=c;
       }while(c!='\n');
-      msg.from->send(READLINE_RESULT, readline_result_msg{ret});
+      msg.from->send(readline_result_msg{ret});
     };
 
     // std::map<symbol, std::function<void(const std::any &)>> _case = {
@@ -66,11 +66,11 @@ namespace opp::io{
   }
 
   void file::print_(std::string &&str){
-    send(PRINT, print_msg{str});
+    send(print_msg{str});
   }
 
   std::string file::readline(){
-    send(READLINE, readline_msg{opp::self()});
+    send(readline_msg{opp::self()});
     auto res = opp::self()->receive<readline_result_msg>(process::FOREVER);
     return res.string;
   }

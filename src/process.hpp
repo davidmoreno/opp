@@ -53,7 +53,7 @@ namespace opp {
     };
 
     // Sends a message to this process
-    void send(const symbol &, std::any &&msg);
+    void send(std::any &&msg);
     void exit();
     bool running(){ return _running; }
     void monitor();
