@@ -69,7 +69,7 @@ namespace opp{
       throw opp::process_exit(this);
     // printf("%s: Send %s\n", name().c_str(), s.name());
     std::unique_lock<std::mutex> lck(mtx);
-    messages.push_back(std::make_pair(DOWN, msg));
+    messages.push_back(msg);
     message_signal.notify_all();
   }
 

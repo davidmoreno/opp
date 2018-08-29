@@ -31,7 +31,7 @@ namespace opp {
     std::mutex mtx;
     std::thread thread;
 
-    std::vector<std::pair<symbol, std::any>> messages;
+    std::vector<std::any> messages;
     std::condition_variable message_signal;
 
     // These will receive "{DOWN, process}" when process stop running
@@ -81,8 +81,8 @@ namespace opp {
         std::unique_lock<std::mutex> lck(mtx);
         auto endI = messages.end();
         for(auto msg=messages.begin();msg!=endI;++msg){
-          if (msg->second.type() == typeid(A)) {
-            A ret = std::any_cast<A>(std::move(msg->second));
+          if ((*msg).type() == typeid(A)) {
+            A ret = std::any_cast<A>(std::move(*msg));
             messages.erase(msg);
             return ret;
           }
@@ -101,7 +101,7 @@ namespace opp {
     }
 
     template<typename A, typename B>
-    symbol receive(
+    void receive(
                 std::function<void(const A &)> fa,
                 std::function<void(const B &)> fb,
                 const std::chrono::seconds &timeout=std::chrono::seconds(5)
@@ -116,9 +116,9 @@ namespace opp {
         std::unique_lock<std::mutex> lck(mtx);
         auto endI = messages.end();
         for(auto msg=messages.begin();msg!=endI;++msg){
-          if (match<A,B>(msg->second, fa,fb)) {
+          if (match<A,B>(*msg, fa,fb)) {
             messages.erase(msg);
-            return msg->first;
+            return;
           }
           maybe_exit_or_timeout(msg);
         }
