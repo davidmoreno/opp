@@ -6,17 +6,19 @@
 #include "process.hpp"
 #include "io.hpp"
 #include "term.hpp"
+#include "logger.hpp"
 
 namespace opp{
+
   /**
    * @short This is a fake process to allow to have calls from the main process
    *
    * This is just a placeholder to allow to send and receive message from the
    * main process.
    */
-  class MainProcess : public process{
+  class main_process : public process{
   public:
-    MainProcess() : process("main"){};
+    main_process() : process("main"){};
     virtual void loop(){
       while(running()){
         sleep(1000);
@@ -35,17 +37,14 @@ namespace opp{
     vm = this;
 
     // Start some required classes
-    opp::io::stdin = std::make_shared<opp::io::file>("stdin", 0);
-    opp::io::stdin->run();
+    opp::io::stdin = opp::start<opp::io::file>("stdin", 0);
+    opp::io::stdout = opp::start<opp::io::file>("stdout", 1);
+    opp::io::stderr = opp::start<opp::io::file>("stderr", 2);
 
-    opp::io::stdout = std::make_shared<opp::io::file>("stdout", 1);
-    opp::io::stdout->run();
+    opp::logger::__logger = opp::start<opp::logger::logger>();
 
-    opp::io::stderr = std::make_shared<opp::io::file>("stderr", 2);
-    opp::io::stderr->run();
-
-    // And self
-    _self = std::make_shared<MainProcess>();
+    // And self. No run.
+    _self = start<main_process>();
   }
 
   VM::~VM(){

@@ -9,7 +9,7 @@ namespace opp::task{
     return task;
   }
 
-  task::task(std::function<void(void)> &&_fn) : fn(_fn){}
+  task::task(std::function<void(void)> &&_fn) : process("task"), fn(_fn){}
 
   void task::loop(){
     OPP_DEBUG("Start task");

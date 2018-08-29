@@ -47,4 +47,9 @@ namespace opp::logger{
       __logger->log(filename, lineno, loglevel, str);
     }
   }
+
+  static void flush(){
+    auto myl = __logger;
+    myl->flush();
+  }
 }

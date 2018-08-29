@@ -49,9 +49,6 @@ namespace serverboards{
   }
 
   void loop(){
-    auto logger = std::make_shared<opp::logger::logger>();
-    logger->run();
-
     rpc_method("dir", [](const json &) -> json{
       return opp::utils::extract_keys(data.method_map);
     });
@@ -69,7 +66,7 @@ namespace serverboards{
         // data.running=false; // To stop on debug
       } catch (opp::process_exit &){
         OPP_INFO("Exit.");
-        logger->flush();
+        opp::logger::flush();
         exit(0);
       } catch (std::exception &e){
         fprintf(stderr, "Exception at serverboards::loop: %s.\n", e.what());

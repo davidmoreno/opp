@@ -65,7 +65,8 @@ namespace opp::logger{
         }),
         std::function<void(const flush_msg&)>([](const flush_msg &pr){
           pr.process->send(flush_ready_msg{});
-        })
+        }),
+        opp::process::FOREVER
       );
     }
   }

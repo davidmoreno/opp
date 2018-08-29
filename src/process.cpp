@@ -9,13 +9,6 @@
 namespace opp{
   std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
 
-  static void print_backtrace(){
-    void *array[10];
-    size_t size = backtrace(array, 10);
-    backtrace_symbols_fd(array, size, 2);
-    fprintf(stderr, "\n");
-  }
-
   void process::loop(){
     throw opp::not_implemented();
   };
@@ -52,10 +45,10 @@ namespace opp{
       this->loop();
       // printf("%s: End\n", this->name().c_str());
     } catch (std::exception &e){
-      fprintf(stderr, "%s: Exit process. Exception: %s.\n", this->name().c_str(), e.what());
+      fprintf(stderr, "\n%s: Exit process. Exception: %s.\n", this->name().c_str(), e.what());
       print_backtrace();
     } catch (...) {
-      fprintf(stderr, "%s: Exit process. Unknown exception.\n", this->name().c_str());
+      fprintf(stderr, "\n%s: Exit process. Unknown exception.\n", this->name().c_str());
       print_backtrace();
     }
     _inloop = false;
@@ -66,12 +59,12 @@ namespace opp{
   }
 
   process::~process(){
-    // printf("%s: ~process %p\n", _name.c_str(), this);
+    std::cerr<<std::this_thread::get_id()<<" "<<_name<<": me "<<this<<std::endl;
+    std::cerr<<thread.get_id()<<" "<<_name<<": ~process "<<this<<std::endl;
     exit();
     while(_inloop){ // FIXME spinning to get stop
     }
-    vm->remove_process(shared_from_this());
-    thread.join();
+    vm->remove_process(weak_from_this());
   }
 
   void process::send(std::any &&msg){
@@ -86,7 +79,6 @@ namespace opp{
   void process::exit(){
     printf("%s: exit\n", _name.c_str());
     _running = false;
-    send(exit_msg{shared_from_this()});
   }
 
   void process::monitor(){
