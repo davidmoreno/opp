@@ -49,15 +49,20 @@ namespace opp{
       _inloop = true;
       this->loop();
       // printf("%s: End\n", this->name().c_str());
+    } catch (opp::process_exit &e){
+      if (e.code != 0){
+        fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
+        print_backtrace(this->name());
+      }
     } catch (opp::exception &e){
       fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
-      print_backtrace();
+      print_backtrace(this->name());
     } catch (std::exception &e){
       fprintf(stderr, "\n%s: Exit process. C++ Exception: %s.\n", this->name().c_str(), e.what());
-      print_backtrace();
+      print_backtrace(this->name());
     } catch (...) {
       fprintf(stderr, "\n%s: Exit process. Unknown exception.\n", this->name().c_str());
-      print_backtrace();
+      print_backtrace(this->name());
     }
     _inloop = false;
 
@@ -97,8 +102,8 @@ namespace opp{
   void process::throw_timeout(){
     throw opp::process_timeout(shared_from_this());
   }
-  void process::throw_exit(){
-    throw opp::process_exit(shared_from_this(), 1);
+  void process::throw_exit(int code){
+    throw opp::process_exit(shared_from_this(), code);
   }
 
 }

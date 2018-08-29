@@ -22,20 +22,21 @@ namespace opp{
   }
 
   // from https://stackoverflow.com/questions/3151779/best-way-to-invoke-gdb-from-inside-program-to-print-its-stacktrace/4611112#4611112
-  void print_backtrace(){
+  void print_backtrace(std::string name){
     void *trace[16];
     char **messages = (char **)NULL;
     char temp[256];
     char temp2[256];
     int i, trace_size = 0;
+    const char *cname = name.c_str();
 
     trace_size = backtrace(trace, 16);
     messages = backtrace_symbols(trace, trace_size);
 
-    printf("[bt] Execution path:\n");
+    printf("[%s] Execution path:\n", cname);
     for (i=1; i<trace_size; ++i)
     {
-      fprintf(stderr, "[bt] #%d %s -- ", i, messages[i]);
+      fprintf(stderr, "[%s] #%d %s -- ", cname, i, messages[i]);
 
       /* find first occurence of '(' or ' ' in message[i] and assume
        * everything before that is the file name. (Don't go beyond 0 though

@@ -99,7 +99,7 @@ namespace opp {
         if (to_ == std::cv_status::timeout)
           throw_timeout();
         if (!running())
-          throw_exit();
+          throw_exit(0);
       }
 
     }
@@ -131,8 +131,7 @@ namespace opp {
         if (to_ == std::cv_status::timeout)
           throw_timeout();
         if (!running())
-          throw_exit();
-
+          throw_exit(0);
       }
     }
 
@@ -158,6 +157,6 @@ namespace opp {
     // I dont know about the exceptions here, as they reference the same class. Need to do some tricks.
     void throw_bad_receiver();
     void throw_timeout();
-    void throw_exit();
+    void throw_exit(int code);
   };
 }

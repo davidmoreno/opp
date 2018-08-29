@@ -17,5 +17,5 @@ namespace opp{
     return pr;
   }
 
-  void print_backtrace();
+  void print_backtrace(std::string name = "??");
 }
