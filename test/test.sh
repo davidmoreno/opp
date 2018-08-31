@@ -14,5 +14,5 @@ else
   cd $BUILD
 fi
 
-make -j
+make
 cat ../test/testfile.txt | bin/sbds

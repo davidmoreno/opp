@@ -24,6 +24,25 @@ namespace opp {
   struct down_msg{ std::shared_ptr<opp::process> process; };
 
 
+  template<typename... Args>
+  int type_in(const std::type_info &tpe);
+
+  template<typename A, typename... Args>
+  int type_in_helper(const std::type_info &tpe){
+    if (tpe == typeid(A))
+      return 0;
+    return type_in<Args...>(tpe) + 1;
+  }
+  template<typename... Args>
+  int type_in(const std::type_info &tpe){
+    return type_in_helper<Args...>(tpe);
+  }
+  template<>
+  inline int type_in<>(const std::type_info &tpe){
+    return -10000;
+  }
+
+
   class process : public std::enable_shared_from_this<process>{
     std::string _name;
     std::atomic<bool> _running;
@@ -67,13 +86,11 @@ namespace opp {
     // FIXME. This is the lazy wait. On all send will check the full queue.
     // The nice way would be on each receive first check the message queue, and
     // then wait for my message.
-    // We do it frist like this as its easier to ust check the full queue
+    // We do it first like this as its easier to ust check the full queue
     // in a loop.
 
     // returns or blocks. Filter is called on each function to know if
     // thats what you were waiting for. The process may loose the thread.
-    // symbol receive(const std::map<symbol, std::function<void(const std::any &)>> &case_, const std::chrono::seconds &timeout=std::chrono::seconds(5));
-
     template<typename A>
     A receive(const std::chrono::seconds &timeout=std::chrono::seconds(5)){
       if (self().get() != this)
@@ -81,27 +98,10 @@ namespace opp {
 
       auto until = std::chrono::system_clock::now() + timeout;
 
-      while(true){
-        // printf("%s: receive 1\n", _name.c_str());
-        std::unique_lock<std::mutex> lck(mtx);
-        auto endI = messages.end();
-        for(auto msg=messages.begin();msg!=endI;++msg){
-          if ((*msg).type() == typeid(A)) {
-            A ret = std::any_cast<A>(std::move(*msg));
-            messages.erase(msg);
-            return ret;
-          }
-          maybe_exit_or_timeout(msg);
-        }
-
-        // printf("%s: Wait for message1\n", name().c_str());
-        auto to_ = message_signal.wait_until(lck, until);
-        if (to_ == std::cv_status::timeout)
-          throw_timeout();
-        if (!running())
-          throw_exit(0);
-      }
-
+      int pos;
+      std::any el;
+      std::tie(pos, el) = get_any<A>(until);
+      return std::any_cast<A>(el);
     }
 
     template<typename A, typename B>
@@ -115,42 +115,39 @@ namespace opp {
 
       auto until = std::chrono::system_clock::now() + timeout;
 
-      while(true){
+      int pos;
+      std::any el;
+      std::tie(pos, el) = get_any<A,B>(until);
+      if (pos == 0){
+        fa(std::any_cast<A>(el));
+      }
+      if (pos == 1){
+        fb(std::any_cast<B>(el));
+      }
+    }
+
+    /**
+     * @short Gets from the queue any message from the template list
+     */
+    template<typename... Args>
+    std::pair<int, std::any> get_any(const std::chrono::time_point<std::chrono::system_clock> &maxt){
+      while(running()){
         std::unique_lock<std::mutex> lck(mtx);
         auto endI = messages.end();
         for(auto msg=messages.begin();msg!=endI;++msg){
-          bool m = match<A, B>(*msg, fa,fb);
-
-          if (m) {
+          int pos = type_in<Args...>((*msg).type());
+          if (pos>=0) {
+            auto ret = std::move(*msg);
             messages.erase(msg);
-            return;
+            return std::make_pair(pos, ret);
           }
           maybe_exit_or_timeout(msg);
         }
-
-        // printf("%s: Wait for message1\n", name().c_str());
-        auto to_ = message_signal.wait_until(lck, until);
+        auto to_ = message_signal.wait_until(lck, maxt);
         if (to_ == std::cv_status::timeout)
           throw_timeout();
-        if (!running())
-          throw_exit(0);
       }
-    }
-
-    template<typename A>
-    bool match(const std::any &msg, std::function<void(const A &)> fa){
-      if (msg.type() == typeid(A)){
-        fa(std::any_cast<A>(msg));
-        return true;
-      }
-      return false;
-    }
-    template<typename A, typename B>
-    bool match(const std::any &msg, std::function<void(const A &)> fa, std::function<void(const B &)> fb){
-      bool m;
-      m = match(msg, fa);
-      m = m || match(msg, fb);
-      return m;
+      throw_exit(0);
     }
   private:
     void maybe_exit_or_timeout(std::vector<std::any>::iterator &);
