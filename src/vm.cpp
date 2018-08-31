@@ -56,7 +56,9 @@ namespace opp{
 
     running = false;
     std::unique_lock<std::mutex> lck(mutex);
-    for(auto pr: processes){
+    auto endI = std::rend(processes);
+    for(auto I = std::rbegin(processes);I!=endI;++I){
+      auto pr = *I;
       if (pr->running()){
         std::cerr<<"Stopping #"<<pr->pid()<<" <"<<pr->name()<<">"<<std::endl;
         pr->_running = false;
