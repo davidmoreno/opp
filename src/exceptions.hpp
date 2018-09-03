@@ -52,21 +52,24 @@ namespace opp{
 
   class bad_receiver : public opp::process_exception {
   public:
+    std::string msg;
     bad_receiver(std::shared_ptr<opp::process> pr) : process_exception(pr){
       // print_backtrace();
+      msg = concat("bad receiver. Should be ", to_string(pr));
     };
     const char *what() const noexcept{
-      return "Receive on wrong process. Only currently executing process can call receive.";
+      return msg.c_str();
     }
   };
 
   class process_timeout : public opp::process_exception {
   public:
+    std::string msg;
     process_timeout(std::shared_ptr<opp::process> pr) : process_exception(pr){
-      // print_backtrace();
+      msg = concat("timeout ", to_string(pr));
     };
     const char *what() const noexcept{
-      return "timeout";
+      return msg.c_str();
     }
   };
 
@@ -78,7 +81,7 @@ namespace opp{
       if (code!=0){
         print_backtrace();
       }
-      description = opp::concat("exit #", pr->pid(), "<", pr->name(), "> code: ", _code, " at #", self()->pid(), "<", self()->name(), ">");
+      description = concat("exit #", pr->pid(), "<", pr->name(), "> code: ", _code, " at #", self()->pid(), "<", self()->name(), ">");
     };
     const char *what() const noexcept{
       return description.c_str();
