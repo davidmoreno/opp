@@ -2,12 +2,24 @@
 
 #include <exception>
 #include <memory>
+#include <execinfo.h>
+#include <cxxabi.h>
 #include "process.hpp"
 #include "string.hpp"
 #include "opp.hpp"
 
 namespace opp{
-  class exception : public std::exception {};
+  class exception : public std::exception {
+    void *trace[16];
+    size_t trace_size;
+  public:
+    exception(){
+      trace_size = backtrace(trace, 16);
+    }
+    void print_backtrace(std::string name="??"){
+      opp::print_backtrace(std::move(name), trace, trace_size);
+    }
+  };
 
   class process_exception : public opp::exception {
   public:
@@ -17,6 +29,24 @@ namespace opp{
     };
     const char *what() const noexcept{
       return "Receive on wrong process. Only currently executing process can call receive.";
+    }
+  };
+
+  class bad_cast : public opp::exception {
+  public:
+    std::string msg;
+    bad_cast(std::string a, std::string b){
+      char *adm = abi::__cxa_demangle(a.c_str(), nullptr, nullptr, nullptr);
+      char *bdm = abi::__cxa_demangle(b.c_str(), nullptr, nullptr, nullptr);
+      msg = concat(
+        "Bad cast. From ",
+        adm ? adm : a,
+        " to ",
+        bdm ? bdm : b
+      );
+    }
+    const char *what() const noexcept{
+      return msg.c_str();
     }
   };
 

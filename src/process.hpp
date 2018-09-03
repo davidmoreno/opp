@@ -101,7 +101,11 @@ namespace opp {
       int pos;
       std::any el;
       std::tie(pos, el) = get_any<A>(until);
-      return std::any_cast<A>(el);
+      try{
+        return std::any_cast<A>(el);
+      } catch(...){
+        throw_bad_cast(el.type().name(), typeid(A).name());
+      }
     }
 
     template<typename A, typename B>
@@ -119,11 +123,22 @@ namespace opp {
       std::any el;
       std::tie(pos, el) = get_any<A,B>(until);
       if (pos == 0){
-        fa(std::any_cast<A>(el));
+        cast_n_call<A>(std::move(el), std::move(fa));
       }
       if (pos == 1){
-        fb(std::any_cast<B>(el));
+        cast_n_call<B>(std::move(el), std::move(fb));
       }
+    }
+
+    template<typename A>
+    void cast_n_call(std::any &&el, std::function<void(const A &)> f){
+      A ael;
+      try{
+        ael=std::any_cast<A>(std::move(el));
+      } catch (...){
+        throw_bad_cast(el.type().name(), typeid(A).name());
+      }
+      f(ael);
     }
 
     /**
@@ -154,6 +169,7 @@ namespace opp {
     void base_loop();
 
     // I dont know about the exceptions here, as they reference the same class. Need to do some tricks.
+    void throw_bad_cast(std::string typea, std::string typeb);
     void throw_bad_receiver();
     void throw_timeout();
     void throw_exit(int code);

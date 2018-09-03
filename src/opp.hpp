@@ -18,4 +18,5 @@ namespace opp{
   }
 
   void print_backtrace(std::string name = "??");
+  void print_backtrace(std::string name, void *trace[], size_t tracesize);
 }

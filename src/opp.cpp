@@ -24,13 +24,23 @@ namespace opp{
   // from https://stackoverflow.com/questions/3151779/best-way-to-invoke-gdb-from-inside-program-to-print-its-stacktrace/4611112#4611112
   void print_backtrace(std::string name){
     void *trace[16];
+    size_t trace_size = 0;
+    trace_size = backtrace(trace, 16);
+
+    print_backtrace(std::move(name), trace, trace_size);
+  }
+
+  std::mutex btmutex;
+
+  void print_backtrace(std::string name, void *trace[], size_t trace_size){
+    std::unique_lock<std::mutex> lck(btmutex);
+
     char **messages = (char **)NULL;
     char temp[256];
     char temp2[256];
-    int i, trace_size = 0;
+    int i;
     const char *cname = name.c_str();
 
-    trace_size = backtrace(trace, 16);
     messages = backtrace_symbols(trace, trace_size);
 
     printf("[%s] Execution path:\n", cname);
