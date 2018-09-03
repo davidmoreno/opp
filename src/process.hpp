@@ -175,3 +175,9 @@ namespace opp {
     void throw_exit(int code);
   };
 }
+
+namespace std{
+  inline std::string to_string(const std::shared_ptr<opp::process> &pr){
+    return ::opp::concat("[#", pr->pid(), " ", pr->name(), "]");
+  }
+}
