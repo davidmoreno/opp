@@ -17,7 +17,7 @@ namespace opp::logger{
   };
   struct flush_ready_msg{};
 
-  logger::logger(){
+  logger::logger() : process("logger") {
   }
   logger::~logger(){
     __logger = nullptr;

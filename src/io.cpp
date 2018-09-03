@@ -37,9 +37,10 @@ namespace opp::io{
       do{
         ssize_t n = read(fd, &c, 1);
         if (n!=1){
-          fprintf(::stderr, "stdin closed\n");
+          OPP_DEBUG("stdin closed");
           msg.from->send(exit_msg{shared_from_this()});
-          throw opp::process_exit(shared_from_this(), 0);
+          stop();
+          return;
         }
         ret+=c;
       }while(c!='\n');
@@ -58,7 +59,7 @@ namespace opp::io{
     //   }}
     // };
 
-    while(true){ // This will exit because of an exception when closed
+    while(running()){ // This will exit because of an exception when closed
       receive<print_msg, readline_msg>(printfn, readlinefn, FOREVER);
     }
   }

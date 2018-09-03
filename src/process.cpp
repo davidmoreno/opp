@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <execinfo.h>
+#include <pthread.h>
 #include "process.hpp"
 #include "opp.hpp"
 #include "vm.hpp"
@@ -33,6 +34,8 @@ namespace opp{
     // printf("%s: New process %p\n", _name.c_str(), this);
     _running=false;
     _pid = ++pidcount;
+
+    pthread_setname_np(pthread_self(), name.c_str());
   }
 
   void process::run(){
@@ -79,8 +82,9 @@ namespace opp{
     if (!running())
       throw opp::process_exit(shared_from_this(), 1);
     // printf("%s: Send %s\n", name().c_str(), s.name());
+    fprintf(stderr, "%s -> %s (%s)\n", to_string(self()).c_str(), to_string(shared_from_this()).c_str(), to_string(msg.type()).c_str());
     std::unique_lock<std::mutex> lck(mtx);
-    messages.push_back(msg);
+    messages.push_back(std::move(msg));
     message_signal.notify_all();
   }
 
