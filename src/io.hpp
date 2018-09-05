@@ -25,7 +25,7 @@ namespace opp::io{
     file(std::string &&filename);
     ~file();
     virtual void loop();
-
+    virtual void stop();
 
     // out funcs
     void print_(std::string &&str);

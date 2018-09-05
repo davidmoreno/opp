@@ -6,7 +6,7 @@ namespace opp::logger{
   std::shared_ptr<logger> __logger = nullptr;
 
   struct log_msg{
-    int pid;
+    std::shared_ptr<opp::process> pid;
     const char *filename;
     int lineno;
     LogLevel loglevel;
@@ -18,6 +18,8 @@ namespace opp::logger{
   struct flush_ready_msg{};
 
   logger::logger() : process("logger") {
+    if (__logger)
+      throw opp::already_initialized();
   }
   logger::~logger(){
     __logger = nullptr;
@@ -56,9 +58,11 @@ namespace opp::logger{
             break;
           }
 
+          std::string _name = msg.pid->to_string();
+
           opp::io::stderr->println(term::color(
             opp::concat(
-              "#", msg.pid, " ",
+              _name, " ",
               "[", timestamp, "] ",
               "[", filename, ":", msg.lineno, "]\t"
             ), color),
@@ -70,11 +74,13 @@ namespace opp::logger{
         }),
         opp::process::FOREVER
       );
+      fprintf(stderr, "...logger... %d\n", running());
     }
+    fprintf(stderr, "Logger out\n");
   }
 
   void logger::log(const char *filename, int lineno, LogLevel loglevel, const std::string &msg){
-    send(log_msg{self()->pid(), filename, lineno, loglevel, msg});
+    send(log_msg{self(), filename, lineno, loglevel, msg});
   }
   /// Blocks until this is processed
   void logger::flush(){

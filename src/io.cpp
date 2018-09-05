@@ -64,6 +64,12 @@ namespace opp::io{
     }
   }
 
+  void file::stop(){
+    close(fd);
+    fprintf(::stderr, "Force stop %s\n", name().c_str());
+    this->process::stop();
+  }
+
   void file::print_(std::string &&str){
     send(print_msg{str});
   }

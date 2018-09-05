@@ -82,15 +82,21 @@ namespace opp{
     if (!running())
       throw opp::process_exit(shared_from_this(), 1);
     // printf("%s: Send %s\n", name().c_str(), s.name());
-    fprintf(stderr, "%s -> %s (%s)\n", to_string(self()).c_str(), to_string(shared_from_this()).c_str(), to_string(msg.type()).c_str());
+
+#ifndef __MESSAGES_DEBUG__
+    fprintf(stderr, "%s -> %s (%s)\n", self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
+#endif
+
     std::unique_lock<std::mutex> lck(mtx);
     messages.push_back(std::move(msg));
     message_signal.notify_all();
   }
 
   void process::stop(){
-    printf("%s: stop\n", _name.c_str());
-    vm->stop(shared_from_this());
+    _running=false;
+    message_signal.notify_all();
+
+    vm->send(stop_process_msg{shared_from_this()});
   }
 
   void process::monitor(){

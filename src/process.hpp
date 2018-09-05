@@ -14,6 +14,7 @@
 #include <iostream>
 #include <memory>
 #include "opp.hpp"
+#include "string.hpp"
 
 namespace opp {
   class VM;
@@ -69,7 +70,7 @@ namespace opp {
     const std::string &name(){ return _name; };
     int pid(){ return _pid; }
 
-    /// Must be called to really start runnig the process. This is required for shared_ptrto work properly.
+    /// Must be called to really start runnig the process. This is required for shared_ptr to work properly.
     /// It is virtual, to be able to add code that uses shared_from_this, but should call process::run() at end
     virtual void run();
 
@@ -78,7 +79,7 @@ namespace opp {
 
     // Sends a message to this process
     void send(std::any &&msg);
-    void stop();
+    virtual void stop();
     bool running(){ return _running; }
     void monitor();
     void demonitor();
@@ -130,6 +131,32 @@ namespace opp {
       }
     }
 
+    template<typename A, typename B, typename C>
+    void receive(
+                std::function<void(const A &)> fa,
+                std::function<void(const B &)> fb,
+                std::function<void(const C &)> fc,
+                const std::chrono::seconds &timeout=std::chrono::seconds(5)
+              ){
+      if (self().get() != this)
+        throw_bad_receiver();
+
+      auto until = std::chrono::system_clock::now() + timeout;
+
+      int pos;
+      std::any el;
+      std::tie(pos, el) = get_any<A, B, C>(until);
+      if (pos == 0){
+        cast_n_call<A>(std::move(el), std::move(fa));
+      }
+      if (pos == 1){
+        cast_n_call<B>(std::move(el), std::move(fb));
+      }
+      if (pos == 2){
+        cast_n_call<C>(std::move(el), std::move(fc));
+      }
+    }
+
     template<typename A>
     void cast_n_call(std::any &&el, std::function<void(const A &)> f){
       A ael;
@@ -154,15 +181,33 @@ namespace opp {
           if (pos>=0) {
             auto ret = std::move(*msg);
             messages.erase(msg);
-            return std::make_pair(pos, ret);
+
+#ifndef __MESSAGES_DEBUG__
+            fprintf(stderr, "%s received %s\n", to_string().c_str(), std::to_string(ret.type()).c_str());
+#endif
+
+            return std::make_pair(pos, std::move(ret));
           }
           maybe_exit_or_timeout(msg);
         }
         auto to_ = message_signal.wait_until(lck, maxt);
-        if (to_ == std::cv_status::timeout)
+        if (to_ == std::cv_status::timeout){
+          auto idx = type_in<Args...>(typeid(timeout_msg));
+          if (idx>=0){
+            return std::make_pair(idx, timeout_msg{self()});
+          }
           throw_timeout();
+        }
       }
       throw_exit(0);
+    }
+
+    std::shared_ptr<process> self(){
+      return shared_from_this();
+    }
+
+    std::string to_string(){
+      return ::opp::concat("[#", pid(), " ", name(), "]");
     }
   private:
     void maybe_exit_or_timeout(std::vector<std::any>::iterator &);
@@ -178,6 +223,6 @@ namespace opp {
 
 namespace std{
   inline std::string to_string(const std::shared_ptr<opp::process> &pr){
-    return ::opp::concat("[#", pr->pid(), " ", pr->name(), "]");
+    return pr->to_string();
   }
 }
