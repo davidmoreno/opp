@@ -168,8 +168,8 @@ namespace opp{
     }
 
     // Busy wait it to finish.
-    if (pr->thread.joinable())
-      pr->thread.join();
+    if (pr->fiber.joinable())
+      pr->fiber.join();
   }
 
   void VM::print_stats(){
@@ -200,7 +200,7 @@ namespace opp{
     // std::cerr<<"Dirty "<<processes.size()<<std::endl;
     processes.erase(std::remove_if(processes.begin(), processes.end(), [](std::shared_ptr<process> &p){
       if (!p->running()){
-        p->thread.join();
+        p->fiber.join();
         return true;
       }
       return false;

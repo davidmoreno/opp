@@ -1,11 +1,12 @@
 #include <iostream>
 #include <unistd.h>
 #include <execinfo.h>
-#include <pthread.h>
 #include "process.hpp"
 #include "opp.hpp"
 #include "vm.hpp"
 #include "exceptions.hpp"
+
+#define OPP_MAX_CHANNEL_SIZE 128
 
 namespace opp{
   std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
@@ -15,7 +16,7 @@ namespace opp{
     throw opp::not_implemented();
   };
 
-  void process::maybe_exit_or_timeout(std::vector<std::any>::iterator &msgI){
+  void process::maybe_exit_or_timeout(std::list<std::any>::iterator &msgI){
     std::any &msg = *msgI;
     // fprintf(stderr, "Maybe exit or timeout %s %s %s", msg.type().name(), typeid(exit_msg).name(), typeid(timeout_msg).name());
     if (msg.type() == typeid(exit_msg)){
@@ -30,17 +31,17 @@ namespace opp{
     }
   }
 
-  process::process(std::string &&name) : _name(name){
+  process::process(std::string &&name) : _name(name), inqueue(OPP_MAX_CHANNEL_SIZE){
     // printf("%s: New process %p\n", _name.c_str(), this);
     _running=false;
     _pid = ++pidcount;
 
-    pthread_setname_np(pthread_self(), name.c_str());
+    // pthread_setname_np(pthread_self(), name.c_str());
   }
 
   void process::run(){
     _running=true;
-    thread = std::move(std::thread([this](){ this-> base_loop(); }));
+    fiber = fibers::fiber([this](){ this-> base_loop(); });
   }
 
   void process::base_loop(){
@@ -87,9 +88,7 @@ namespace opp{
     fprintf(stderr, "%s -> %s (%s)\n", self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
 #endif
 
-    std::unique_lock<std::mutex> lck(mtx);
-    messages.push_back(std::move(msg));
-    message_signal.notify_all();
+    inqueue.push(msg);
   }
 
   void process::stop(){

@@ -1,2 +1,9 @@
 [generators]
 cmake
+
+[requires]
+boost/1.67.0@conan/stable
+
+[options]
+boost:shared=True # False
+# Take a look for all available options in conanfile.py

@@ -1,20 +1,20 @@
 #pragma once
 
-#include <vector>
-#include <thread>
+#include <list>
+#include <boost/fiber/all.hpp>
 #include <utility>
 #include <set>
 #include <map>
 #include <chrono>
 #include <any>
-#include <mutex>
 #include <atomic>
-#include <condition_variable>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include "opp.hpp"
 #include "string.hpp"
+
+namespace fibers = boost::fibers;
 
 namespace opp {
   class VM;
@@ -50,11 +50,13 @@ namespace opp {
     std::atomic<bool> _inloop;
     int _pid;
 
-    std::mutex mtx;
-    std::thread thread;
+    fibers::fiber fiber;
 
-    std::vector<std::any> messages;
-    std::condition_variable message_signal;
+    // Only the fiber can move the messages to the messages list
+    fibers::buffered_channel<std::any> inqueue;
+
+    std::list<std::any> messages;
+    fibers::condition_variable message_signal;
 
     // These will receive "{DOWN, process}" when process stop running
     std::set<std::shared_ptr<process>> monitored_by;
@@ -96,7 +98,6 @@ namespace opp {
     A receive(const std::chrono::seconds &timeout=std::chrono::seconds(5)){
       if (self().get() != this)
         throw_bad_receiver();
-
       auto until = std::chrono::system_clock::now() + timeout;
 
       int pos;
@@ -173,31 +174,32 @@ namespace opp {
      */
     template<typename... Args>
     std::pair<int, std::any> get_any(const std::chrono::time_point<std::chrono::system_clock> &maxt){
+      std::any msg;
+      auto endI = messages.end();
       while(running()){
-        std::unique_lock<std::mutex> lck(mtx);
-        auto endI = messages.end();
+        // 1st check on messages currently on queue
         for(auto msg=messages.begin();msg!=endI;++msg){
           int pos = type_in<Args...>((*msg).type());
           if (pos>=0) {
             auto ret = std::move(*msg);
             messages.erase(msg);
 
-#ifndef __MESSAGES_DEBUG__
-            fprintf(stderr, "%s received %s\n", to_string().c_str(), std::to_string(ret.type()).c_str());
-#endif
-
             return std::make_pair(pos, std::move(ret));
           }
           maybe_exit_or_timeout(msg);
         }
-        auto to_ = message_signal.wait_until(lck, maxt);
-        if (to_ == std::cv_status::timeout){
-          auto idx = type_in<Args...>(typeid(timeout_msg));
-          if (idx>=0){
-            return std::make_pair(idx, timeout_msg{self()});
-          }
-          throw_timeout();
-        }
+
+        // Now get a new message or timeout
+        auto res = inqueue.pop_wait_until(msg, maxt);
+        if (res == fibers::channel_op_status::timeout)
+          msg = timeout_msg{self()};
+        if (res != fibers::channel_op_status::success)
+          throw_exit(1);
+
+        // finally set check until current first (soon second) and push at the front the new value
+        // This is nice as we use lists.
+        endI = messages.begin();
+        messages.push_front(std::move(msg));
       }
       throw_exit(0);
     }
@@ -210,7 +212,7 @@ namespace opp {
       return ::opp::concat("[#", pid(), " ", name(), "]");
     }
   private:
-    void maybe_exit_or_timeout(std::vector<std::any>::iterator &);
+    void maybe_exit_or_timeout(std::list<std::any>::iterator &);
     void base_loop();
 
     // I dont know about the exceptions here, as they reference the same class. Need to do some tricks.
