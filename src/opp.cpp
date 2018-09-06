@@ -63,7 +63,8 @@ namespace opp{
 
         sprintf(temp,"addr2line 0x%X -e %.*s", (int)offset, (int)p, messages[i]);
             //last parameter is the file name of the symbol
-        system(temp);
+        int res = system(temp);
+        if (res){} // Ignore
       } else {
         char *m = addr;
         char *r = temp;
