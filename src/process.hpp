@@ -1,7 +1,9 @@
 #pragma once
 
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/buffered_channel.hpp>
+
 #include <list>
-#include <boost/fiber/all.hpp>
 #include <utility>
 #include <set>
 #include <map>

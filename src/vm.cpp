@@ -3,12 +3,18 @@
 #include <unistd.h>
 #include <sstream>
 #include <pthread.h>
+
+#include <boost/fiber/barrier.hpp>
+#include <boost/fiber/algo/shared_work.hpp>
+
 #include "vm.hpp"
 #include "process.hpp"
 #include "io.hpp"
 #include "term.hpp"
 #include "logger.hpp"
 #include "task.hpp"
+
+#define OPP_WORKER_THREADS 4
 
 namespace opp{
 
@@ -20,7 +26,7 @@ namespace opp{
    */
   class vm_process : public process{
   public:
-    vm_process() : process("vm"){};
+    vm_process() : process("vm"){}
     virtual void loop(){
       while(running()){
         receive<exit_msg, timeout_msg, stop_process_msg>(
@@ -50,11 +56,28 @@ namespace opp{
   std::shared_ptr<opp::VM> vm = nullptr;
   static thread_local std::shared_ptr<process> _self;
 
-  VM::VM(){
+  VM::VM() : workers(OPP_WORKER_THREADS){
+    fibers::barrier barrier(OPP_WORKER_THREADS + 1);
+    for (int i=0; i<OPP_WORKER_THREADS; ++i){
+      workers[i] = std::thread([this, &barrier](){
+        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::shared_work >();
+        barrier.wait();
+
+        std::unique_lock<std::mutex> lk(running_mutex);
+        // this is what makes all the other fibers to run, or this thread to wait.
+        running_cond.wait( lk, [this](){ return !this->running; } );
+      });
+    }
+    barrier.wait();
   }
 
 
   VM::~VM(){
+    running=false;
+    running_cond.notify_all();
+    for (std::thread & t: workers) { /*< wait for threads to terminate >*/
+      t.join();
+    }
   }
 
   void VM::send(std::any &&msg){

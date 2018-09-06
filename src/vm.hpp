@@ -6,6 +6,8 @@
 #include <atomic>
 #include <any>
 
+#include <boost/fiber/condition_variable.hpp>
+
 
 namespace opp{
   class process;
@@ -22,6 +24,11 @@ namespace opp{
     std::shared_ptr<process> main;
     std::shared_ptr<process> vm;
 
+    // This is required to make the fiber scheduler wait on each thread until
+    // I say so. https://www.boost.org/doc/libs/1_67_0/libs/fiber/examples/work_sharing.cpp
+    boost::fibers::condition_variable_any running_cond{};
+    std::mutex running_mutex{};
+    std::vector<std::thread> workers;
 
     friend class vm_process;
     void real_stop();
