@@ -84,8 +84,8 @@ namespace opp{
       throw opp::process_exit(shared_from_this(), 1);
     // printf("%s: Send %s\n", name().c_str(), s.name());
 
-#ifndef __MESSAGES_DEBUG__
-    fprintf(stderr, "%s -> %s (%s)\n", self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
+#ifdef __MESSAGES_DEBUG__
+    fprintf(stderr, "%s -> %s\t (%s)\n", opp::self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
 #endif
 
     inqueue.push(msg);

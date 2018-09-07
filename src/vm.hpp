@@ -7,6 +7,7 @@
 #include <any>
 
 #include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/fss.hpp>
 
 
 namespace opp{
@@ -23,6 +24,7 @@ namespace opp{
     std::atomic<bool> running;
     std::shared_ptr<process> main;
     std::shared_ptr<process> vm;
+    boost::fibers::fiber_specific_ptr<std::shared_ptr<process>> _self;
 
     // This is required to make the fiber scheduler wait on each thread until
     // I say so. https://www.boost.org/doc/libs/1_67_0/libs/fiber/examples/work_sharing.cpp

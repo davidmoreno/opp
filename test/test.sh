@@ -13,4 +13,4 @@ else
 fi
 
 ninja || make
-cat ../test/testfile.txt | bin/sbds
+cat ../test/testfile.txt | timeout 5 bin/sbds

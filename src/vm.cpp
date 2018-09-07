@@ -54,9 +54,22 @@ namespace opp{
   };
 
   std::shared_ptr<opp::VM> vm = nullptr;
-  static thread_local std::shared_ptr<process> _self;
 
   VM::VM() : workers(OPP_WORKER_THREADS){
+  }
+
+
+  VM::~VM(){
+  }
+
+  void VM::send(std::any &&msg){
+    vm->send(std::move(msg));
+  }
+
+  void VM::start(){
+    running = true;
+
+    /// Real start processing data at fibers
     fibers::barrier barrier(OPP_WORKER_THREADS + 1);
     for (int i=0; i<OPP_WORKER_THREADS; ++i){
       workers[i] = std::thread([this, &barrier](){
@@ -66,42 +79,36 @@ namespace opp{
         std::unique_lock<std::mutex> lk(running_mutex);
         // this is what makes all the other fibers to run, or this thread to wait.
         running_cond.wait( lk, [this](){ return !this->running; } );
+        printf("EOT\n");
       });
     }
+    boost::fibers::use_scheduling_algorithm< boost::fibers::algo::shared_work >();
     barrier.wait();
-  }
 
-
-  VM::~VM(){
-    running=false;
-    running_cond.notify_all();
-    for (std::thread & t: workers) { /*< wait for threads to terminate >*/
-      t.join();
-    }
-  }
-
-  void VM::send(std::any &&msg){
-    vm->send(std::move(msg));
-  }
-
-  void VM::start(){
-    running = true;
-    _self = main = opp::start<main_process>();
+    main = opp::start<main_process>();
+    self(main);
     vm = opp::start<vm_process>();
-    pthread_setname_np(pthread_self(), "real-main");
+    // pthread_setname_np(pthread_self(), "real-main");
 
     // Start some required classes
     opp::io::stdin = opp::start<opp::io::file>("stdin", 0);
     opp::io::stdout = opp::start<opp::io::file>("stdout", 1);
     opp::io::stderr = opp::start<opp::io::file>("stderr", 2);
-
     opp::logger::__logger = opp::start<opp::logger::logger>();
+
+
   }
 
   void VM::stop(){
     vm->send(exit_msg{vm, 0});
     while(vm->running()){
       sleep(1);
+    }
+
+    running=false;
+    running_cond.notify_all();
+    for (std::thread & t: workers) { /*< wait for threads to terminate >*/
+      t.join();
     }
     fprintf(stderr, "Done stop VM\n");
   }
@@ -154,11 +161,11 @@ namespace opp{
   }
 
   std::shared_ptr<process> VM::self(){
-    return _self;
+    return *_self;
   }
 
   void VM::self(std::shared_ptr<process> self){
-    _self = self;
+    _self.reset(new std::shared_ptr(self));
   }
 
   void VM::start(std::shared_ptr<process> pr){

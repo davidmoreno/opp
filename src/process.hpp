@@ -178,6 +178,9 @@ namespace opp {
     std::pair<int, std::any> get_any(const std::chrono::time_point<std::chrono::system_clock> &maxt){
       std::any msg;
       auto endI = messages.end();
+#ifdef __MESSAGES_DEBUG__
+      fprintf(stderr, "%s\t Wait for:\n", to_string().c_str());
+#endif
       while(running()){
         // 1st check on messages currently on queue
         for(auto msg=messages.begin();msg!=endI;++msg){
@@ -194,9 +197,12 @@ namespace opp {
         // Now get a new message or timeout
         auto res = inqueue.pop_wait_until(msg, maxt);
         if (res == fibers::channel_op_status::timeout)
-          msg = timeout_msg{self()};
+          msg = timeout_msg{shared_from_this()};
         if (res != fibers::channel_op_status::success)
           throw_exit(1);
+#ifdef __MESSAGES_DEBUG__
+        fprintf(stderr, "%s\t Got msg %s\n", to_string().c_str(), std::to_string(msg.type()).c_str());
+#endif
 
         // finally set check until current first (soon second) and push at the front the new value
         // This is nice as we use lists.
@@ -204,10 +210,6 @@ namespace opp {
         messages.push_front(std::move(msg));
       }
       throw_exit(0);
-    }
-
-    std::shared_ptr<process> self(){
-      return shared_from_this();
     }
 
     std::string to_string(){
