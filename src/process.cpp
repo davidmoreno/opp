@@ -85,7 +85,7 @@ namespace opp{
     // printf("%s: Send %s\n", name().c_str(), s.name());
 
 #ifdef __MESSAGES_DEBUG__
-    fprintf(stderr, "%s -> %s\t (%s)\n", opp::self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
+    fprintf(stderr, "%s -> %s | %s\n", opp::self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
 #endif
 
     inqueue.push(msg);

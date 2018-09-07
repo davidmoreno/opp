@@ -49,7 +49,8 @@ namespace opp{
   public:
     main_process() : process("main"){};
     virtual void loop(){
-      receive<exit_msg>(process::FOREVER);
+      boost::this_fiber::sleep_for(std::chrono::seconds(100));
+      // receive<exit_msg>(process::FOREVER);
     }
   };
 

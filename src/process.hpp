@@ -27,9 +27,9 @@ namespace opp {
   struct down_msg{ std::shared_ptr<opp::process> process; };
 
 
+  /// Checks if a given type is any of the given as template params, and returns position or <0
   template<typename... Args>
   int type_in(const std::type_info &tpe);
-
   template<typename A, typename... Args>
   int type_in_helper(const std::type_info &tpe){
     if (tpe == typeid(A))
@@ -45,6 +45,21 @@ namespace opp {
     return -10000;
   }
 
+  /// Returns a string with the type names at template params
+  template<typename... Args>
+  inline std::string get_type_names();
+  template<typename A, typename... Args>
+  std::string get_type_names_helper(){
+    return std::to_string(typeid(A)) + ", " + get_type_names<Args...>();
+  }
+  template<typename... Args>
+  inline std::string get_type_names(){
+    return get_type_names_helper<Args...>();
+  }
+  template<>
+  inline std::string get_type_names(){
+    return std::string("");
+  }
 
   class process : public std::enable_shared_from_this<process>{
     std::string _name;
@@ -179,7 +194,7 @@ namespace opp {
       std::any msg;
       auto endI = messages.end();
 #ifdef __MESSAGES_DEBUG__
-      fprintf(stderr, "%s\t Wait for:\n", to_string().c_str());
+      fprintf(stderr, "%s\t Wait for: %s\n", to_string().c_str(), get_type_names<Args...>().c_str());
 #endif
       while(running()){
         // 1st check on messages currently on queue
@@ -201,13 +216,18 @@ namespace opp {
         if (res != fibers::channel_op_status::success)
           throw_exit(1);
 #ifdef __MESSAGES_DEBUG__
-        fprintf(stderr, "%s\t Got msg %s\n", to_string().c_str(), std::to_string(msg.type()).c_str());
+        fprintf(stderr, "%s\t Got msg %s. Waiting for %s\n",
+          to_string().c_str(),
+          std::to_string(msg.type()).c_str(),
+          get_type_names<Args...>().c_str()
+        );
 #endif
 
         // finally set check until current first (soon second) and push at the front the new value
         // This is nice as we use lists.
-        endI = messages.begin();
         messages.push_front(std::move(msg));
+        endI = messages.begin();
+        ++endI;
       }
       throw_exit(0);
     }
