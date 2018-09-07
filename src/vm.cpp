@@ -6,6 +6,7 @@
 
 #include <boost/fiber/barrier.hpp>
 #include <boost/fiber/algo/shared_work.hpp>
+#include <boost/fiber/algo/work_stealing.hpp>
 
 #include "vm.hpp"
 #include "process.hpp"
@@ -13,6 +14,7 @@
 #include "term.hpp"
 #include "logger.hpp"
 #include "task.hpp"
+#include "extra/thread_barrier.hpp"
 
 #define OPP_WORKER_THREADS 4
 
@@ -56,7 +58,7 @@ namespace opp{
 
   std::shared_ptr<opp::VM> vm = nullptr;
 
-  VM::VM() : workers(OPP_WORKER_THREADS){
+  VM::VM() : nworkers(OPP_WORKER_THREADS){
   }
 
 
@@ -71,10 +73,12 @@ namespace opp{
     running = true;
 
     /// Real start processing data at fibers
-    fibers::barrier barrier(OPP_WORKER_THREADS + 1);
-    for (int i=0; i<OPP_WORKER_THREADS; ++i){
-      workers[i] = std::thread([this, &barrier](){
-        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::shared_work >();
+
+    thread_barrier barrier(nworkers);
+    boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >(nworkers, true);
+    for (int i=0; i<nworkers-1; ++i){
+      workers.emplace_back([this, &barrier](){
+        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing>(nworkers, true);
         barrier.wait();
 
         std::unique_lock<std::mutex> lk(running_mutex);
@@ -83,7 +87,6 @@ namespace opp{
         printf("EOT\n");
       });
     }
-    boost::fibers::use_scheduling_algorithm< boost::fibers::algo::shared_work >();
     barrier.wait();
 
     main = opp::start<main_process>();

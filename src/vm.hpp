@@ -31,6 +31,7 @@ namespace opp{
     boost::fibers::condition_variable_any running_cond{};
     std::mutex running_mutex{};
     std::vector<std::thread> workers;
+    size_t nworkers;
 
     friend class vm_process;
     void real_stop();
