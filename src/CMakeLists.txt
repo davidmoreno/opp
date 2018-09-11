@@ -1,6 +1,6 @@
 add_library(opp
-  io.cpp serverboards.cpp
-  opp.cpp process.cpp symbol.cpp vm.cpp io.cpp logger.cpp task.cpp
+  opp.cpp process.cpp io.cpp
+  symbol.cpp vm.cpp io.cpp logger.cpp task.cpp
 )
 
 # add_definitions(-D__MESSAGES_DEBUG__)
