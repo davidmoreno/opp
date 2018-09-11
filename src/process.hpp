@@ -61,6 +61,14 @@ namespace opp {
     return std::string("");
   }
 
+  /// Can destructore the type of the argument of a lambda
+  template <typename T>
+  struct lambda_arg : public lambda_arg<decltype(&T::operator())>{};
+  template <typename ClassType, typename ArgType>
+  struct lambda_arg<void (ClassType::*) (ArgType args) const> {
+      using type = ArgType;
+  };
+
   class process : public std::enable_shared_from_this<process>{
     std::string _name;
     std::atomic<bool> _running;
@@ -128,50 +136,46 @@ namespace opp {
     }
 
     template<typename A, typename B>
-    void receive(
-                std::function<void(const A &)> fa,
-                std::function<void(const B &)> fb,
+    void receive(A fa, B fb,
                 const std::chrono::seconds &timeout=std::chrono::seconds(5)
               ){
       if (self().get() != this)
         throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
+      using TA = typename lambda_arg<A>::type;
+      using TB = typename lambda_arg<B>::type;
 
-      int pos;
-      std::any el;
-      std::tie(pos, el) = get_any<A,B>(until);
+      auto [pos, el] = get_any<TA, TB>(until);
       if (pos == 0){
-        cast_n_call<A>(std::move(el), std::move(fa));
+        cast_n_call<TA>(std::move(el), std::move(fa));
       }
       if (pos == 1){
-        cast_n_call<B>(std::move(el), std::move(fb));
+        cast_n_call<TB>(std::move(el), std::move(fb));
       }
     }
 
     template<typename A, typename B, typename C>
-    void receive(
-                std::function<void(const A &)> fa,
-                std::function<void(const B &)> fb,
-                std::function<void(const C &)> fc,
+    void receive(A fa, B fb, C fc,
                 const std::chrono::seconds &timeout=std::chrono::seconds(5)
               ){
       if (self().get() != this)
         throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
+      using TA = typename lambda_arg<A>::type;
+      using TB = typename lambda_arg<B>::type;
+      using TC = typename lambda_arg<C>::type;
 
-      int pos;
-      std::any el;
-      std::tie(pos, el) = get_any<A, B, C>(until);
+      auto [pos, el] = get_any<TA, TB, TC>(until);
       if (pos == 0){
-        cast_n_call<A>(std::move(el), std::move(fa));
+        cast_n_call<TA>(std::move(el), std::move(fa));
       }
       if (pos == 1){
-        cast_n_call<B>(std::move(el), std::move(fb));
+        cast_n_call<TB>(std::move(el), std::move(fb));
       }
       if (pos == 2){
-        cast_n_call<C>(std::move(el), std::move(fc));
+        cast_n_call<TC>(std::move(el), std::move(fc));
       }
     }
 

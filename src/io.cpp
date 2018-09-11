@@ -24,14 +24,14 @@ namespace opp::io{
   void file::loop(){
     // printf("process file %s %d\n", filename.c_str(), fd);
     // Build once, use man times
-    std::function<void(const print_msg &)> printfn = [this](const print_msg &msg){
+    auto printfn = [this](print_msg msg){
       auto str = msg.str;
       auto wrote = write(this->fd, str.c_str(), str.size());
       if ((wrote < 0) || (unsigned(wrote) < str.size())){
         throw write_error();
       }
     };
-    std::function<void(const readline_msg &)> readlinefn = [this](const readline_msg &msg){
+    auto readlinefn = [this](readline_msg msg){
       std::string ret="";
       char c;
       do{
@@ -60,7 +60,7 @@ namespace opp::io{
     // };
 
     while(running()){ // This will exit because of an exception when closed
-      receive<print_msg, readline_msg>(printfn, readlinefn, FOREVER);
+      receive(printfn, readlinefn, FOREVER);
     }
   }
 

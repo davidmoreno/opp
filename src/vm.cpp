@@ -31,16 +31,16 @@ namespace opp{
     vm_process() : process("vm"){}
     virtual void loop(){
       while(running()){
-        receive<exit_msg, timeout_msg, stop_process_msg>(
-          std::function<void(const exit_msg &)>       ([](const exit_msg &){
+        receive(
+          [](exit_msg){
             vm->real_stop();
-          }),
-          std::function<void(const timeout_msg &)>    ([](const timeout_msg &){
+          },
+          [](timeout_msg){
             vm->clean_processes();
-          }),
-          std::function<void(const stop_process_msg &)>([](const stop_process_msg &msg){
+          },
+          [](stop_process_msg msg){
             fprintf(stderr, "Stop process message %s\n", msg.pr->to_string().c_str());
-          }),
+          },
           std::chrono::seconds(60)
         );
       }

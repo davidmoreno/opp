@@ -32,8 +32,8 @@ namespace opp::logger{
 
   void logger::loop(){
     while(running()){
-      receive<log_msg, flush_msg>(
-        std::function<void(const log_msg &)>([](const log_msg &msg){
+      receive(
+        [](log_msg msg){
           // from https://stackoverflow.com/questions/9527960/how-do-i-construct-an-iso-8601-datetime-in-c
           time_t now;
           time(&now);
@@ -68,10 +68,10 @@ namespace opp::logger{
             ), color),
             msg.message
           ); //term::color("msg"), term::RED);
-        }),
-        std::function<void(const flush_msg&)>([](const flush_msg &pr){
+        },
+        [](flush_msg pr){
           pr.process->send(flush_ready_msg{});
-        }),
+        },
         opp::process::FOREVER
       );
       fprintf(stderr, "...logger... %d\n", running());
