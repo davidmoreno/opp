@@ -82,11 +82,10 @@ namespace opp{
   void process::send(std::any &&msg){
     if (!running())
       throw opp::process_exit(shared_from_this(), 1);
-    // printf("%s: Send %s\n", name().c_str(), s.name());
 
-#ifdef __MESSAGES_DEBUG__
-    fprintf(stderr, "%s -> %s | %s\n", opp::self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
-#endif
+    if (_debug){
+      fprintf(stderr, "%s -> %s | %s\n", opp::self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
+    }
 
     inqueue.push(msg);
   }

@@ -73,6 +73,7 @@ namespace opp {
     std::string _name;
     std::atomic<bool> _running;
     std::atomic<bool> _inloop;
+    std::atomic<bool> _debug = false;
     int _pid;
 
     fibers::fiber fiber;
@@ -96,6 +97,7 @@ namespace opp {
 
     const std::string &name(){ return _name; };
     int pid(){ return _pid; }
+    void set_debug(bool debug){ _debug = debug; }
 
     /// Must be called to really start runnig the process. This is required for shared_ptr to work properly.
     /// It is virtual, to be able to add code that uses shared_from_this, but should call process::run() at end
@@ -197,9 +199,9 @@ namespace opp {
     std::pair<int, std::any> get_any(const std::chrono::time_point<std::chrono::system_clock> &maxt){
       std::any msg;
       auto endI = messages.end();
-#ifdef __MESSAGES_DEBUG__
-      fprintf(stderr, "%s\t Wait for: %s\n", to_string().c_str(), get_type_names<Args...>().c_str());
-#endif
+      if (_debug){
+        fprintf(stderr, "%s\t Wait for: %s\n", to_string().c_str(), get_type_names<Args...>().c_str());
+      }
       while(running()){
         // 1st check on messages currently on queue
         for(auto msg=messages.begin();msg!=endI;++msg){
@@ -219,13 +221,14 @@ namespace opp {
           msg = timeout_msg{shared_from_this()};
         if (res != fibers::channel_op_status::success)
           throw_exit(1);
-#ifdef __MESSAGES_DEBUG__
-        fprintf(stderr, "%s\t Got msg %s. Waiting for %s\n",
-          to_string().c_str(),
-          std::to_string(msg.type()).c_str(),
-          get_type_names<Args...>().c_str()
-        );
-#endif
+
+        if (_debug){
+          fprintf(stderr, "%s\t Got msg %s. Waiting for %s\n",
+            to_string().c_str(),
+            std::to_string(msg.type()).c_str(),
+            get_type_names<Args...>().c_str()
+          );
+        }
 
         // finally set check until current first (soon second) and push at the front the new value
         // This is nice as we use lists.
