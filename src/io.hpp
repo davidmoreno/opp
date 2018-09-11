@@ -1,8 +1,8 @@
 #pragma once
 
-#include "process.hpp"
-#include "exceptions.hpp"
-#include "string.hpp"
+#include "core/process.hpp"
+#include "core/exceptions.hpp"
+#include "core/string.hpp"
 
 namespace opp::io{
   class write_error : public opp::exception{

@@ -1,8 +1,10 @@
-add_library(opp
-  opp.cpp process.cpp io.cpp
-  symbol.cpp vm.cpp io.cpp logger.cpp task.cpp
+add_library(opp SHARED
+  # this adds the basic core processes and vm
+  $<TARGET_OBJECTS:opp_core>
+  # and now the opp. The core can not access the opp.
+  io.cpp logger.cpp task.cpp supervisor.cpp
 )
 
-# add_definitions(-D__MESSAGES_DEBUG__)
+add_subdirectory(core)
 
 target_link_libraries(opp ${CONAN_LIBS})

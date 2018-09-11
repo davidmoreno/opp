@@ -1,4 +1,4 @@
-#include "term.hpp"
+#include "core/term.hpp"
 #include "io.hpp"
 #include "logger.hpp"
 

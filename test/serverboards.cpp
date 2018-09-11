@@ -2,10 +2,10 @@
 #include <iostream>
 #include "io.hpp"
 #include "logger.hpp"
-#include "term.hpp"
-#include "vm.hpp"
+#include "core/term.hpp"
+#include "core/vm.hpp"
 #include "serverboards.hpp"
-#include "utils.hpp"
+#include "core/utils.hpp"
 #include "task.hpp"
 
 

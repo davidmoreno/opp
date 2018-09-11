@@ -10,10 +10,9 @@
 
 #include "vm.hpp"
 #include "process.hpp"
-#include "io.hpp"
 #include "term.hpp"
-#include "logger.hpp"
-#include "task.hpp"
+#include "../io.hpp" // FIXME separation of concerns violation
+#include "../logger.hpp"
 #include "extra/thread_barrier.hpp"
 
 #define OPP_WORKER_THREADS 4
@@ -222,7 +221,7 @@ namespace opp{
       }
     }
 
-    io::stderr->println(term::color(stats.str(), term::WHITE, term::BLUE));
+    fprintf(stderr, "%s\n", term::color(stats.str(), term::WHITE, term::BLUE).c_str());
   }
 
   /// Cleans the process list form zombi processes that are completely done.

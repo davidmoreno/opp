@@ -2,7 +2,7 @@
 
 #include <libgen.h>
 #include <string.h>
-#include "string.hpp"
+#include "core/string.hpp"
 
 #define OPP_DEBUG(...) opp::logger::log(__FILE__, __LINE__, opp::logger::DEBUG, __VA_ARGS__)
 #define OPP_WARNING(...) opp::logger::log(__FILE__, __LINE__, opp::logger::WARNING, __VA_ARGS__)
