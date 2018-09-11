@@ -62,7 +62,7 @@ namespace serverboards{
           auto req = json::parse(line);
           process_request(std::move(req));
 
-          opp::vm->print_stats();
+          // opp::vm->print_stats();
           // opp::io::stderr->println("Debug STOP");
           // data.running=false; // To stop on debug
         } catch (opp::process_exit &){

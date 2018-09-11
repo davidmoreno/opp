@@ -74,7 +74,6 @@ namespace opp::logger{
         },
         opp::process::FOREVER
       );
-      fprintf(stderr, "...logger... %d\n", running());
     }
     fprintf(stderr, "Logger out\n");
   }
