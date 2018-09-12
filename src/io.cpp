@@ -1,11 +1,97 @@
 #include <iostream>
 #include <unistd.h>
+#include <memory.h>
+#include <sys/epoll.h>
 #include "io.hpp"
 #include "core/opp.hpp"
 #include "logger.hpp"
 #include "core/exceptions.hpp"
 
 namespace opp::io{
+  class poller_t : public std::enable_shared_from_this<poller_t> {
+    int pollerfd;
+    std::thread epoll_thread;
+    std::atomic<bool> running = true;
+
+    std::mutex pending_mutex;
+    std::unordered_map<int, std::function<void(void)>> pending;
+  public:
+    poller_t() {
+      pollerfd = epoll_create1(EPOLL_CLOEXEC);
+      fprintf(::stderr, "Start poller\n");
+
+      if (pollerfd == -1){
+        throw opp::exception("cant open epoll");
+      }
+
+      epoll_thread = std::thread(&poller_t::epoll_loop, this);
+    }
+    ~poller_t(){
+      running = false;
+      close(pollerfd);
+      epoll_thread.join();
+    }
+    void epoll_loop(){
+      int max_events = 128;
+      struct epoll_event events[max_events];
+
+      fprintf(::stderr, "Start polling\n");
+      while(running){
+        fprintf(::stderr, "Polling...\n");
+        auto count = epoll_wait(pollerfd, events, max_events, 100000);
+        fprintf(::stderr, "Got %d\n", count);
+        std::vector<std::function<void(void)>> to_call;
+
+        {
+          auto _ = std::lock_guard(pending_mutex);
+          for (auto i=0;i<count;i++){
+            auto fd = events[i].data.fd;
+            to_call.emplace_back( std::move(pending[fd])  );
+            pending.erase(fd);
+          }
+        }
+
+        for(auto cb: to_call){
+          try{
+            cb();
+          } catch (...) {
+            fprintf(::stderr, "Error processing io!\n");
+          }
+        }
+      }
+    }
+
+    // To be called by a process
+    void wait_read(int fd){
+
+    }
+    void wait_write(int fd){
+
+    }
+  private:
+    void wait_read_fd(int fd, std::function<void(void)> callback){
+      wait_fd(fd, std::move(callback), EPOLLOUT);
+    }
+    void wait_write_fd(int fd, std::function<void(void)> callback){
+      wait_fd(fd, std::move(callback), EPOLLIN);
+    }
+    void wait_fd(int fd, std::function<void(void)> callback, int flags){
+      {
+        auto _ = std::lock_guard(pending_mutex);
+        pending[fd] = callback;
+      }
+      struct epoll_event event;
+      event.events = flags;
+      event.data.fd = fd;
+      if(epoll_ctl(pollerfd, EPOLL_CTL_ADD, 0, &event)){
+        throw opp::exception("failed to add fd to poller");
+      }
+    }
+  };
+
+  static std::shared_ptr<poller_t> poller;
+
+
   struct print_msg{ std::string str; };
   struct readline_msg{ std::shared_ptr<opp::process> from; };
   struct readline_result_msg{ std::string string; };
@@ -15,6 +101,9 @@ namespace opp::io{
   std::shared_ptr<file> stderr;
 
   file::file(std::string &&name, int fd) : process(std::string(name)), filename(name), fd(fd){
+    if (poller.use_count() == 0){ // Initialize once
+      poller = std::make_shared<poller_t>();
+    }
   }
 
   file::~file(){

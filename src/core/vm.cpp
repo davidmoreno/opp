@@ -98,8 +98,6 @@ namespace opp{
     opp::io::stdout = opp::start<opp::io::file>("stdout", 1);
     opp::io::stderr = opp::start<opp::io::file>("stderr", 2);
     opp::logger::__logger = opp::start<opp::logger::logger>();
-
-
   }
 
   void VM::stop(){
