@@ -7,10 +7,11 @@ if [ ! -e "$BUILD" ]; then
   mkdir -p $BUILD
   cd $BUILD
   conan install ..
-  cmake -G Ninja ..
+  cmake ..
 else
   cd $BUILD
 fi
 
-ninja || make
-cat ../test/testfile.txt | timeout 5 bin/sbds
+make -j8
+# cat ../test/testfile.txt | timeout 5 bin/sbds
+echo "test" | timeout 5 bin/test_tcp localhost 1234
