@@ -31,16 +31,15 @@ namespace opp{
     }
   }
 
-  process::process(std::string &&name) : _name(name), inqueue(OPP_MAX_CHANNEL_SIZE){
+  process::process(std::string name) : _name(std::move(name)), inqueue(OPP_MAX_CHANNEL_SIZE){
     // printf("%s: New process %p\n", _name.c_str(), this);
     _running=false;
     _pid = ++pidcount;
-
+    _running=true;
     // pthread_setname_np(pthread_self(), name.c_str());
   }
 
   void process::run(){
-    _running=true;
     fiber = fibers::fiber([this](){ this-> base_loop(); });
   }
 

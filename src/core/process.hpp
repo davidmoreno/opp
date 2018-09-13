@@ -91,7 +91,7 @@ namespace opp {
     static std::chrono::seconds FOREVER;
 
     process() : process("noname") {};
-    process(std::string &&name);
+    process(std::string name);
     process(const process &) = delete;
     virtual ~process();
 
@@ -181,15 +181,74 @@ namespace opp {
       }
     }
 
+    template<typename A, typename B, typename C, typename D>
+    void receive(A fa, B fb, C fc, D fd,
+                const std::chrono::seconds &timeout=std::chrono::seconds(5)
+              ){
+      if (self().get() != this)
+        throw_bad_receiver();
+
+      auto until = std::chrono::system_clock::now() + timeout;
+      using TA = typename lambda_arg<A>::type;
+      using TB = typename lambda_arg<B>::type;
+      using TC = typename lambda_arg<C>::type;
+      using TD = typename lambda_arg<D>::type;
+
+      auto [pos, el] = get_any<TA, TB, TC, TD>(until);
+      if (pos == 0){
+        cast_n_call<TA>(std::move(el), std::move(fa));
+      }
+      if (pos == 1){
+        cast_n_call<TB>(std::move(el), std::move(fb));
+      }
+      if (pos == 2){
+        cast_n_call<TC>(std::move(el), std::move(fc));
+      }
+      if (pos == 3){
+        cast_n_call<TD>(std::move(el), std::move(fd));
+      }
+    }
+
+    template<typename A, typename B, typename C, typename D, typename E>
+    void receive(A fa, B fb, C fc, D fd, E fe,
+                const std::chrono::seconds &timeout=std::chrono::seconds(5)
+              ){
+      if (self().get() != this)
+        throw_bad_receiver();
+
+      auto until = std::chrono::system_clock::now() + timeout;
+      using TA = typename lambda_arg<A>::type;
+      using TB = typename lambda_arg<B>::type;
+      using TC = typename lambda_arg<C>::type;
+      using TD = typename lambda_arg<D>::type;
+      using TE = typename lambda_arg<E>::type;
+
+      auto [pos, el] = get_any<TA, TB, TC, TD, TE>(until);
+      if (pos == 0){
+        cast_n_call<TA>(std::move(el), std::move(fa));
+      }
+      if (pos == 1){
+        cast_n_call<TB>(std::move(el), std::move(fb));
+      }
+      if (pos == 2){
+        cast_n_call<TC>(std::move(el), std::move(fc));
+      }
+      if (pos == 3){
+        cast_n_call<TD>(std::move(el), std::move(fd));
+      }
+      if (pos == 4){
+        cast_n_call<TE>(std::move(el), std::move(fe));
+      }
+    }
+
     template<typename A>
     void cast_n_call(std::any &&el, std::function<void(const A &)> f){
-      A ael;
       try{
-        ael=std::any_cast<A>(std::move(el));
-      } catch (...){
+        auto ael=std::move(std::any_cast<A>(std::move(el)));
+        f(ael);
+      } catch (std::bad_cast &_){
         throw_bad_cast(el.type().name(), typeid(A).name());
       }
-      f(ael);
     }
 
     /**
