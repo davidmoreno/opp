@@ -18,7 +18,7 @@ int main(int argc, char **argv){
   std::vector<int8_t> data(1024);
   std::string str;
   while(!client->eof()){
-    client->write("This is a test");
+    client->write("This is a test\n");
     client->read(data);
 
     str.clear();

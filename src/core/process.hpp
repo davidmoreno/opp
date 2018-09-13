@@ -98,6 +98,7 @@ namespace opp {
     const std::string &name(){ return _name; };
     int pid(){ return _pid; }
     void set_debug(bool debug){ _debug = debug; }
+    bool debug(){ return _debug; }
 
     /// Must be called to really start runnig the process. This is required for shared_ptr to work properly.
     /// It is virtual, to be able to add code that uses shared_from_this, but should call process::run() at end
