@@ -5,30 +5,46 @@
 #include "core/string.hpp"
 
 namespace opp::io{
-  class write_error : public opp::exception{
-    virtual const char* what() const throw(){
-      return "write error";
-    }
+  class exception : public opp::exception{
+  public:
+    exception(std::string str="") : opp::exception(std::move(str)){}
   };
 
-  class read_error : public opp::exception{
-    virtual const char* what() const throw(){
-      return "read error";
-    }
+  class write_error : public exception{
+  public:
+    write_error() : exception("write error"){}
+  };
+
+  class read_error : public exception{
+  public:
+    read_error() : exception("read error"){}
   };
 
   class file : public opp::process{
     std::string filename;
     int fd;
   public:
-    file(std::string &&filename, int fd);
-    file(std::string &&filename);
+    using buffer_t = std::vector<int8_t>;
+
+    file(std::string filename, int fd);
+    file(std::string filename);
     ~file();
+    void replace_fd(int fd);
+
     virtual void loop();
     virtual void stop();
 
+    // io funcs
+    std::string readline();
+    void write(const std::string &data);
+    void write(buffer_t &data);
+    void read(buffer_t &data);
+    bool eof();
+
+    void print_(std::string str);
+    ///////// helpers
+
     // out funcs
-    void print_(std::string &&str);
     template<typename... Args>
     void print(Args ...args){
       print_(concat(args...));
@@ -37,10 +53,7 @@ namespace opp::io{
     void println(Args... args){
       print_(concat(args..., '\n'));
     }
-    // in funcs
-    std::string readline();
   };
-
 
   extern std::shared_ptr<file> stdin;
   extern std::shared_ptr<file> stdout;

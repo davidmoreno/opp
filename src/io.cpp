@@ -10,12 +10,17 @@ namespace opp::io{
   struct print_msg{ std::string str; };
   struct readline_msg{ std::shared_ptr<opp::process> from; };
   struct readline_result_msg{ std::string string; };
+  struct replace_fd_msg{ int fd; };
+  struct read_msg{ file::buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct write_msg{ file::buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct read_result_msg{};
+  struct write_result_msg{};
 
   std::shared_ptr<file> stdin;
   std::shared_ptr<file> stdout;
   std::shared_ptr<file> stderr;
 
-  file::file(std::string &&name, int fd) : process(std::string(name)), filename(name), fd(fd){
+  file::file(std::string name, int fd) : process(name), filename(std::move(name)), fd(fd){
     if (poller.use_count() == 0){ // Initialize once
       poller = std::make_shared<poller_t>();
     }
@@ -25,12 +30,55 @@ namespace opp::io{
     close(fd);
   }
 
+  /// Public API
+  void file::replace_fd(int nfd){
+    send(replace_fd_msg{nfd});
+  }
+
+  void file::print_(std::string str){
+    send(print_msg{std::move(str)});
+  }
+
+  std::string file::readline(){
+    send(readline_msg{opp::self()});
+    auto res = opp::self()->receive<readline_result_msg>(process::FOREVER);
+    return res.string;
+  }
+
+  void file::write(const std::string &str){
+    auto data = buffer_t(str.size());
+    std::copy(str.begin(), str.end(), std::back_inserter(data));
+    write(data);
+  }
+
+  void file::write(buffer_t &data){
+    send(write_msg{data, self()});
+    self()->receive<write_result_msg>();
+  }
+
+  void file::read(buffer_t &data){
+    send(read_msg{data, self()});
+    self()->receive<read_result_msg>();
+  }
+
+  bool file::eof(){
+    return !running();
+  }
+
+  void file::stop(){
+    close(fd);
+    fprintf(::stderr, "Force stop %s\n", name().c_str());
+    this->process::stop();
+  }
+
+
+  /// Server impl
   void file::loop(){
     // printf("process file %s %d\n", filename.c_str(), fd);
     // Build once, use man times
     auto printfn = [this](print_msg msg){
       auto str = msg.str;
-      auto wrote = write(this->fd, str.c_str(), str.size());
+      auto wrote = ::write(this->fd, str.c_str(), str.size());
       if ((wrote < 0) || (unsigned(wrote) < str.size())){
         throw write_error();
       }
@@ -40,7 +88,7 @@ namespace opp::io{
       std::string ret="";
       char c;
       do{
-        ssize_t n = read(fd, &c, 1);
+        ssize_t n = ::read(fd, &c, 1);
         if (n!=1){
           OPP_DEBUG("stdin closed");
           msg.from->send(exit_msg{shared_from_this()});
@@ -50,6 +98,26 @@ namespace opp::io{
         ret+=c;
       }while(c!='\n');
       msg.from->send(readline_result_msg{ret});
+    };
+    auto replace_fd = [this](replace_fd_msg msg){
+      if (fd != -1){
+        throw opp::already_initialized();
+      }
+      fd = msg.fd;
+    };
+    auto write = [this](write_msg msg){
+      auto res = ::write(fd, msg.data.data(), msg.data.size());
+      if (res<0){
+        throw opp::io::write_error();
+      }
+      msg.from->send(write_result_msg{});
+    };
+    auto read = [this](write_msg msg){
+      auto res = ::read(fd, msg.data.data(), msg.data.size());
+      if (res<0){
+        throw opp::io::write_error();
+      }
+      msg.from->send(write_result_msg{});
     };
 
     // std::map<symbol, std::function<void(const std::any &)>> _case = {
@@ -65,23 +133,7 @@ namespace opp::io{
     // };
 
     while(running()){ // This will exit because of an exception when closed
-      receive(printfn, readlinefn, FOREVER);
+      receive(printfn, readlinefn, replace_fd, write, read, FOREVER);
     }
-  }
-
-  void file::stop(){
-    close(fd);
-    fprintf(::stderr, "Force stop %s\n", name().c_str());
-    this->process::stop();
-  }
-
-  void file::print_(std::string &&str){
-    send(print_msg{str});
-  }
-
-  std::string file::readline(){
-    send(readline_msg{opp::self()});
-    auto res = opp::self()->receive<readline_result_msg>(process::FOREVER);
-    return res.string;
   }
 }
