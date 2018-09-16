@@ -106,13 +106,15 @@ namespace opp::io{
       fd = msg.fd;
     };
     auto write = [this](write_msg msg){
+      poller->wait_write(fd);
       auto res = ::write(fd, msg.data.data(), msg.data.size());
       if (res<0){
         throw opp::io::write_error();
       }
       msg.from->send(write_result_msg{});
     };
-    auto read = [this](write_msg msg){
+    auto read = [this](read_msg msg){
+      poller->wait_read(fd);
       auto res = ::read(fd, msg.data.data(), msg.data.size());
       if (res<0){
         throw opp::io::write_error();
