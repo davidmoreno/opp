@@ -18,59 +18,27 @@
 #define OPP_WORKER_THREADS 4
 
 namespace opp{
-
-  /**
-   * @short This is a fake process to allow to have calls from the main process
-   *
-   * This is just a placeholder to allow to send and receive message from the
-   * main process.
-   */
-  class vm_process : public process{
-  public:
-    vm_process() : process("vm"){}
-    virtual void loop(){
-      while(running()){
-        receive(
-          [](exit_msg){
-            vm->real_stop();
-          },
-          [](timeout_msg){
-            vm->clean_processes();
-          },
-          [](stop_process_msg msg){
-            fprintf(stderr, "Stop process message %s\n", msg.pr->to_string().c_str());
-          },
-          std::chrono::seconds(60)
-        );
-      }
-    }
-  };
-
   class main_process : public process{
   public:
     main_process() : process("main"){};
     virtual void loop(){
-      boost::this_fiber::sleep_for(std::chrono::seconds(100));
-      // receive<exit_msg>(process::FOREVER);
+      receive<exit_msg>(process::FOREVER);
     }
   };
 
+  // VM implementation
+
   std::shared_ptr<opp::VM> vm = nullptr;
 
-  VM::VM() : nworkers(OPP_WORKER_THREADS){
+  VM::VM() : process("vm"), nworkers(OPP_WORKER_THREADS){
   }
 
 
   VM::~VM(){
   }
 
-  void VM::send(std::any &&msg){
-    vm->send(std::move(msg));
-  }
-
   void VM::start(){
-    running = true;
-
+    this->_running = true;
     /// Real start processing data at fibers
 
     thread_barrier barrier(nworkers);
@@ -82,7 +50,7 @@ namespace opp{
 
         std::unique_lock<std::mutex> lk(running_mutex);
         // this is what makes all the other fibers to run, or this thread to wait.
-        running_cond.wait( lk, [this](){ return !this->running; } );
+        running_cond.wait( lk, [this](){ return !this->_running; } );
         printf("EOT\n");
       });
     }
@@ -90,7 +58,6 @@ namespace opp{
 
     main = opp::start<main_process>();
     self(main);
-    vm = opp::start<vm_process>();
     // pthread_setname_np(pthread_self(), "real-main");
 
     // Start some required classes
@@ -100,20 +67,22 @@ namespace opp{
     opp::logger::__logger = opp::start<opp::logger::logger>();
 
 
+    // And put me to run too
+    start(shared_from_this());
   }
 
   void VM::stop(){
     vm->send(exit_msg{vm, 0});
-    while(vm->running()){
-      sleep(1);
+    while(running()){
+      fprintf(stderr, "%s Waiting for stop %d\n", self()->to_string().c_str(), running());
+      boost::this_fiber::sleep_for(std::chrono::seconds(1));
     }
 
-    running=false;
     running_cond.notify_all();
     for (std::thread & t: workers) { /*< wait for threads to terminate >*/
       t.join();
     }
-    fprintf(stderr, "Done stop VM\n");
+    fprintf(stderr, "Done stop VM. All threads joined.\n");
   }
 
   void VM::real_stop(){
@@ -124,12 +93,12 @@ namespace opp{
 
     // std::cerr<<"Finishing the vm. Stopping all processes."<<std::endl;
 
-    running = false;
     // This is a layered shutdown.
     // It copies which process exist now (mutexed)
     // Stops them all.
     // and start again. If no processes left. Stop.
     while(true){
+      sleep(1);
       std::vector<std::shared_ptr<process>> tostop;
       {
         std::unique_lock<std::mutex> lck(mutex);
@@ -146,25 +115,53 @@ namespace opp{
           continue;
         if (pr == main) // not on main thread (main)
           continue;
+        fprintf(stderr, "Stopping %s %d\n", pr->to_string().c_str(), pr->running());
         if (pr->running()){
-          std::cerr<<"Stopping "<<to_string(pr)<<std::endl;
+          std::cerr<<"Stopping "<<pr->to_string()<<std::endl;
           pr->stop();
+          boost::this_fiber::yield();
         }
       }
     }
+    fprintf(stderr, "All process stopped\n");
     // Manual stop main, no join
     vm->_running=false;
     main->_running=false;
     // main->message_signal.notify_one();
     // std::cerr<<"VM left "<<vm.use_count()<<std::endl;
+    fprintf(stderr, "All done\n");
   }
 
   void VM::loop(){
-
+    fprintf(stderr, "Run VM loop.\n");
+    auto self = shared_from_this();
+    while(true){
+      receive(
+        [self](exit_msg exit){
+          if (exit.process == vm){
+            fprintf(::stderr, "Stop VM!\n");
+            vm->real_stop();
+            fprintf(::stderr, "Throw END\n");
+            throw opp::process_exit(self, 0);
+          } else {
+            vm->stop(exit.process, exit.code);
+          }
+          vm->print_stats();
+        },
+        [](timeout_msg){
+          vm->clean_processes();
+        },
+        std::chrono::seconds(60)
+      );
+    }
   }
 
   std::shared_ptr<process> VM::self(){
-    return *_self;
+    std::shared_ptr<process> ret = *_self;
+    if (ret){
+      return *_self;
+    }
+    throw opp::not_initialized();
   }
 
   void VM::self(std::shared_ptr<process> self){
@@ -172,19 +169,21 @@ namespace opp{
   }
 
   void VM::start(std::shared_ptr<process> pr){
+    fprintf(stderr, "Starting %s\n", pr->to_string().c_str());
     std::unique_lock<std::mutex> lck(mutex);
     processes.push_back(pr);
     pr->run();
   }
 
-  void VM::stop(std::shared_ptr<process> pr){
-    if (self() != main){
-      throw opp::bad_receiver(main);
+  void VM::stop(std::shared_ptr<process> pr, int code){
+    fprintf(stderr, "%s stop process %s %d\n", to_string().c_str(), pr->to_string().c_str(), code);
+    if (self() != vm){
+      self()->send(exit_msg{pr, code});
+      return;
     }
 
     if (pr->running()){
-      pr->_running = false;
-      pr->message_signal.notify_all();
+      pr->send(exit_msg{pr, 0});
     }
 
     // Remove from running queues
@@ -200,9 +199,12 @@ namespace opp{
       processes.erase(pri);
     }
 
+    fprintf(stderr, "%s wait to finish\n", pr->to_string().c_str());
     // Busy wait it to finish.
     if (pr->fiber.joinable())
       pr->fiber.join();
+
+    fprintf(stderr, "%s removed\n", pr->to_string().c_str());
   }
 
   void VM::print_stats(){
@@ -215,9 +217,10 @@ namespace opp{
     for(const auto &p: processes){
       try{
         auto sp = std::shared_ptr(p);
-        stats<<"  -name: "<<sp->name()<<std::endl;
+        stats<<"  - name: "<<sp->name()<<std::endl;
+        stats<<"    pid: "<<sp->pid()<<std::endl;
       } catch (std::bad_weak_ptr &e) {
-        stats<<"  -name: (removed)"<<std::endl;
+        stats<<"  - name: (removed)"<<std::endl;
       }
     }
 
@@ -228,7 +231,7 @@ namespace opp{
   /// This actually just rleases one shared_ptr counter, so other
   /// users are ok continuing to use the dead zombi
   void VM::clean_processes(){
-    if (!running)
+    if (!running())
       return;
     // std::cerr<<"Dirty "<<processes.size()<<std::endl;
     processes.erase(std::remove_if(processes.begin(), processes.end(), [](std::shared_ptr<process> &p){

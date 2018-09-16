@@ -2,7 +2,7 @@
 
 namespace opp{
   class symbol{
-    int _id;
+    int64_t _id;
     const char *_name;
   public:
     symbol();
@@ -15,7 +15,7 @@ namespace opp{
     };
     const char *name() const { return _name; }
     int id() const{ return _id; }
-  };
 
-  std::ostream& operator<< (std::ostream& os, const symbol &sym);
+    std::string to_string();
+  };
 }

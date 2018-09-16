@@ -25,12 +25,8 @@ namespace opp::logger{
     __logger = nullptr;
   }
 
-  void logger::run(){
-    __logger = this->shared_from_this();
-    process::run();
-  }
-
   void logger::loop(){
+    __logger = this->shared_from_this();
     while(running()){
       receive(
         [](log_msg msg){

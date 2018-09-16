@@ -6,5 +6,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
+include_directories(${CMAKE_SOURCE_DIR}/src/core ${CMAKE_SOURCE_DIR}/src/)
+
 add_subdirectory(src)
 add_subdirectory(test)

@@ -43,10 +43,10 @@ namespace opp{
 
     messages = backtrace_symbols(trace, trace_size);
 
-    printf("[%s] Execution path:\n", cname);
+    printf("%s Execution path:\n", cname);
     for (i=1; i<trace_size; ++i)
     {
-      fprintf(stderr, "[%s] #%d %s -- ", cname, i, messages[i]);
+      fprintf(stderr, "%s #%d %s -- ", cname, i, messages[i]);
 
       /* find first occurence of '(' or ' ' in message[i] and assume
        * everything before that is the file name. (Don't go beyond 0 though
