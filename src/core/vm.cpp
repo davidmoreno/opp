@@ -35,6 +35,7 @@ namespace opp{
 
 
   VM::~VM(){
+    fprintf(stderr, "Processes pending: %ld\n", processes.size());
   }
 
   void VM::start(){
@@ -44,14 +45,14 @@ namespace opp{
     thread_barrier barrier(nworkers);
     boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >(nworkers, true);
     for (int i=0; i<nworkers-1; ++i){
-      workers.emplace_back([this, &barrier](){
+      workers.emplace_back([this, &barrier, i](){
         boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing>(nworkers, true);
         barrier.wait();
 
         std::unique_lock<std::mutex> lk(running_mutex);
         // this is what makes all the other fibers to run, or this thread to wait.
         running_cond.wait( lk, [this](){ return !this->_running; } );
-        printf("EOT\n");
+        printf("EOT %d\n", i);
       });
     }
     barrier.wait();
@@ -82,7 +83,8 @@ namespace opp{
     for (std::thread & t: workers) { /*< wait for threads to terminate >*/
       t.join();
     }
-    fprintf(stderr, "Done stop VM. All threads joined.\n");
+
+    fprintf(stderr, "Done stop VM. All threads joined. %ld Proceeses still running.\n", processes.size());
   }
 
   void VM::real_stop(){
@@ -127,6 +129,10 @@ namespace opp{
     // Manual stop main, no join
     vm->_running=false;
     main->_running=false;
+
+    vm->send(exit_msg{vm, 0});
+    main->send(exit_msg{main, 0});
+
     // main->message_signal.notify_one();
     // std::cerr<<"VM left "<<vm.use_count()<<std::endl;
     fprintf(stderr, "All done\n");

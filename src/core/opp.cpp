@@ -11,6 +11,8 @@ namespace opp{
   }
 
   void start(){
+    if (vm)
+      return;
     vm = std::make_shared<VM>();
     vm->start();
   }
