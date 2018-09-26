@@ -1,6 +1,6 @@
 #include <string>
 #include <vector>
-#include "tcp.hpp"
+#include "tcp_client.hpp"
 #include "logger.hpp"
 
 int main(int argc, char **argv){
@@ -13,17 +13,20 @@ int main(int argc, char **argv){
   }
 
   auto client = opp::start<opp::tcp_client>(argv[1], argv[2]);
-  client->set_debug(true);
+  // client->set_debug(true);
+  // opp::self()->set_debug(true);
 
   std::vector<int8_t> data(1024);
   std::string str;
+  unsigned int n=0;
   while(!client->eof()){
-    client->write("This is a test\n");
+    client->write(opp::concat("This is a test ", n, "\n"));
     client->read(data);
 
-    str.clear();
-    std::copy(data.begin(), data.end(), std::back_inserter(str));
-    OPP_INFO(str);
+    // str.clear();
+    // std::copy(data.begin(), data.end(), std::back_inserter(str));
+    // OPP_INFO(str);
+    n+=1;
   }
   client->stop();
 

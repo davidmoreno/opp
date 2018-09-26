@@ -7,14 +7,14 @@
 #include <arpa/inet.h>
 
 
-#include "tcp.hpp"
+#include "tcp_client.hpp"
 #include "logger.hpp"
 
 using namespace opp;
 
 tcp_client::tcp_client(std::string address, std::string port) : io::file(address+":"+port, -1){
   int sockfd;
-  fprintf(stderr, "%s\n", concat("connect to ", address, ":", port).c_str());
+  OPP_DEBUG("connect to ", address, ":", port);
 
   struct addrinfo hints, *servers;
   memset (&hints, 0, sizeof (hints));
@@ -51,9 +51,10 @@ tcp_client::tcp_client(std::string address, std::string port) : io::file(address
         }
       inet_ntop (serverI->ai_family, ptr, addrstr, sizeof(addrstr));
 
-      fprintf(::stderr,
-        "Try connect IPv%d address: %s (%s) port %s\n", serverI->ai_family == PF_INET6 ? 6 : 4,
-        addrstr, serverI->ai_canonname, port.c_str()
+      OPP_DEBUG(
+        "Try connect IPv", serverI->ai_family == PF_INET6 ? 6 : 4,
+        " address: ", addrstr, " (", serverI->ai_canonname, ") port ",
+        port
       );
     }
 
@@ -62,7 +63,7 @@ tcp_client::tcp_client(std::string address, std::string port) : io::file(address
     }
     if (connect(sockfd, serverI->ai_addr, serverI->ai_addrlen) >= 0){
       if (debug()){
-        fprintf(::stderr, "Connected!\n");
+        OPP_DEBUG("Connected!");
       }
       connected = true;
       break;
