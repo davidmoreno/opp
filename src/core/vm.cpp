@@ -22,7 +22,7 @@ namespace opp{
   public:
     main_process() : process("main"){};
     virtual void loop(){
-      receive<exit_msg>(process::FOREVER);
+      throw opp::exception("Main loop invoked, and should never been. `main` is a special process that do not uses a loop.");
     }
   };
 
@@ -57,7 +57,7 @@ namespace opp{
     }
     barrier.wait();
 
-    main = opp::start<main_process>();
+    main = std::make_shared<main_process>();
     self(main);
     // pthread_setname_np(pthread_self(), "real-main");
 
