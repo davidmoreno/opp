@@ -2,6 +2,7 @@
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/buffered_channel.hpp>
+#include <boost/fiber/condition_variable.hpp>
 
 #include <list>
 #include <utility>
@@ -13,7 +14,6 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include "opp.hpp"
 #include "string.hpp"
 
 namespace fibers = boost::fibers;
@@ -21,6 +21,8 @@ namespace fibers = boost::fibers;
 namespace opp {
   class VM;
   class process;
+
+  std::shared_ptr<opp::process> self();
 
   struct exit_msg{ std::shared_ptr<opp::process> process; int code; };
   struct timeout_msg{ std::shared_ptr<opp::process> process; };
@@ -82,7 +84,6 @@ namespace opp {
     fibers::buffered_channel<std::any> inqueue;
 
     std::list<std::any> messages;
-    fibers::condition_variable message_signal;
 
     // These will receive "{DOWN, process}" when process stop running
     std::set<std::shared_ptr<process>> monitored_by;
@@ -99,16 +100,12 @@ namespace opp {
     int pid(){ return _pid; }
     void set_debug(bool debug){ _debug = debug; }
 
-    /// Must be called to really start runnig the process. This is required for shared_ptr to work properly.
-    /// It is virtual, to be able to add code that uses shared_from_this, but should call process::run() at end
-    virtual void run();
-
     // First function to be called. Can not be on constructor as it runs on the callers context.
     virtual void loop();
 
     // Sends a message to this process
     void send(std::any &&msg);
-    virtual void stop();
+    void stop(int code=0);
     bool running(){ return _running; }
     void monitor();
     void demonitor();
@@ -134,6 +131,22 @@ namespace opp {
         return std::any_cast<A>(el);
       } catch(...){
         throw_bad_cast(el.type().name(), typeid(A).name());
+      }
+    }
+
+    template<typename A>
+    void receive(A fa,
+                const std::chrono::seconds &timeout=std::chrono::seconds(5)
+              ){
+      if (self().get() != this)
+        throw_bad_receiver();
+
+      auto until = std::chrono::system_clock::now() + timeout;
+      using TA = typename lambda_arg<A>::type;
+
+      auto [pos, el] = get_any<TA>(until);
+      if (pos == 0){
+        cast_n_call<TA>(std::move(el), std::move(fa));
       }
     }
 
@@ -251,6 +264,8 @@ namespace opp {
     void throw_bad_receiver();
     void throw_timeout();
     void throw_exit(int code);
+    void run();
+
   };
 }
 

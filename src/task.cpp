@@ -1,3 +1,4 @@
+#include "opp.hpp"
 #include "task.hpp"
 #include "logger.hpp"
 

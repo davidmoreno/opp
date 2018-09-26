@@ -79,7 +79,8 @@ namespace opp{
     std::string description;
     process_exit(std::shared_ptr<opp::process> pr, int _code) : process_exception(pr), code(_code) {
       if (code!=0){
-        print_backtrace();
+        fprintf(::stderr, "%s Exit process, code %d\n", pr->to_string().c_str(), _code);
+        print_backtrace(pr->to_string());
       }
       description = concat("exit #", pr->pid(), "<", pr->name(), "> code: ", _code, " at #", self()->pid(), "<", self()->name(), ">");
     };
