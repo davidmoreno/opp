@@ -3,7 +3,7 @@ add_library(opp SHARED
   $<TARGET_OBJECTS:opp_core>
   # and now the opp. The core can not access the opp.
   io.cpp poller.cpp logger.cpp task.cpp supervisor.cpp
-  tcp.cpp
+  tcp_client.cpp
 )
 
 add_subdirectory(core)
