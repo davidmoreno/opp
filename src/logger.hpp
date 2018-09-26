@@ -26,7 +26,6 @@ namespace opp::logger{
     logger();
     ~logger();
 
-    virtual void run();
     virtual void loop();
 
     std::shared_ptr<logger> shared_from_this(){

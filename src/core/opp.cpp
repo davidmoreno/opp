@@ -11,6 +11,8 @@ namespace opp{
   }
 
   void start(){
+    if (vm)
+      return;
     vm = std::make_shared<VM>();
     vm->start();
   }
@@ -43,7 +45,7 @@ namespace opp{
 
     messages = backtrace_symbols(trace, trace_size);
 
-    printf("[%s] Execution path:\n", cname);
+    printf("%s Execution path:\n", cname);
     for (i=1; i<trace_size; ++i)
     {
       fprintf(stderr, "[%s] #%d  ", cname, i);

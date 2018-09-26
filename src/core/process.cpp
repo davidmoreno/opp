@@ -44,12 +44,10 @@ namespace opp{
   }
 
   void process::base_loop(){
+    vm->self(shared_from_this());
+
     try{
       // printf("%s: Start\n", this->name().c_str());
-
-      // here there can be a race between create the object, create the thread the shared_ptr... and it might not be ready yet.
-      vm->self(shared_from_this());
-
       _inloop = true;
       this->loop();
       // printf("%s: End\n", this->name().c_str());
@@ -58,6 +56,7 @@ namespace opp{
         fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
         e.print_backtrace(this->name());
       }
+      // fprintf(stderr, "%s: End Excp\n", this->name().c_str());
     } catch (opp::exception &e){
       fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
       e.print_backtrace(this->name());
@@ -79,8 +78,8 @@ namespace opp{
   }
 
   void process::send(std::any &&msg){
-    if (!running())
-      throw opp::process_exit(shared_from_this(), 1);
+    // if (!running())
+    //   throw opp::process_exit(shared_from_this(), 1);
 
     if (_debug){
       fprintf(stderr, "%s -> %s | %s\n", opp::self()->to_string().c_str(), to_string().c_str(), std::to_string(msg.type()).c_str());
@@ -89,11 +88,10 @@ namespace opp{
     inqueue.push(msg);
   }
 
-  void process::stop(){
-    _running=false;
-    message_signal.notify_all();
-
-    vm->send(stop_process_msg{shared_from_this()});
+  void process::stop(int code){
+    // fprintf(stderr, "Stop %s %d\n", to_string().c_str(), code);
+    vm->stop(shared_from_this(), code);
+    // vm->send(exit_msg{shared_from_this(), code});
   }
 
   void process::monitor(){

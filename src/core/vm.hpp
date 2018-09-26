@@ -9,21 +9,13 @@
 #include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/fss.hpp>
 
+#include "process.hpp"
 
 namespace opp{
-  class process;
-  class vm_process;
-
-  struct stop_process_msg{
-    std::shared_ptr<process> pr;
-  };
-
-  class VM{
+  class VM : public opp::process{
     std::mutex mutex;
-    std::vector<std::shared_ptr<process>> processes;
-    std::atomic<bool> running;
-    std::shared_ptr<process> main;
-    std::shared_ptr<process> vm;
+    std::vector<std::shared_ptr<opp::process>> processes;
+    std::shared_ptr<opp::process> main;
     boost::fibers::fiber_specific_ptr<std::shared_ptr<process>> _self;
 
     // This is required to make the fiber scheduler wait on each thread until
@@ -33,7 +25,6 @@ namespace opp{
     std::vector<std::thread> workers;
     size_t nworkers;
 
-    friend class vm_process;
     void real_stop();
   public:
     VM();
@@ -41,7 +32,6 @@ namespace opp{
     void start();
     void stop();
 
-    void send(std::any &&msg);
     void loop();
     void loop_thread();
 
@@ -49,7 +39,7 @@ namespace opp{
     void self(std::shared_ptr<process> pr);
 
     void start(std::shared_ptr<process> pr);
-    void stop(std::shared_ptr<process> pr);
+    void stop(std::shared_ptr<process> pr, int code);
 
     void print_stats();
     void clean_processes();
