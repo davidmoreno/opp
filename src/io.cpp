@@ -119,7 +119,7 @@ namespace opp::io{
       if (res<0){
         throw opp::io::write_error();
       }
-      msg.from->send(write_result_msg{});
+      msg.from->send(read_result_msg{});
     };
 
     // std::map<symbol, std::function<void(const std::any &)>> _case = {
