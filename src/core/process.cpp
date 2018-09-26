@@ -32,7 +32,7 @@ namespace opp{
   }
 
   process::process(std::string &&name) : _name(name), inqueue(OPP_MAX_CHANNEL_SIZE){
-    fprintf(stderr, "%s: New process %p\n", _name.c_str(), this);
+    // fprintf(stderr, "%s: New process %p\n", _name.c_str(), this);
     _running=false;
     _pid = ++pidcount;
 
@@ -48,16 +48,16 @@ namespace opp{
     vm->self(shared_from_this());
 
     try{
-      printf("%s: Start\n", this->name().c_str());
+      // printf("%s: Start\n", this->name().c_str());
       _inloop = true;
       this->loop();
-      printf("%s: End\n", this->name().c_str());
+      // printf("%s: End\n", this->name().c_str());
     } catch (opp::process_exit &e){
       if (e.code != 0){
         fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
         e.print_backtrace(this->name());
       }
-      printf("%s: End Excp\n", this->name().c_str());
+      // fprintf(stderr, "%s: End Excp\n", this->name().c_str());
     } catch (opp::exception &e){
       fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
       e.print_backtrace(this->name());
@@ -90,7 +90,7 @@ namespace opp{
   }
 
   void process::stop(int code){
-    fprintf(stderr, "Stop %s %d\n", to_string().c_str(), code);
+    // fprintf(stderr, "Stop %s %d\n", to_string().c_str(), code);
     vm->stop(shared_from_this(), code);
     // vm->send(exit_msg{shared_from_this(), code});
   }

@@ -75,7 +75,7 @@ namespace opp {
     std::string _name;
     std::atomic<bool> _running;
     std::atomic<bool> _inloop;
-    std::atomic<bool> _debug = true;
+    std::atomic<bool> _debug = false;
     int _pid;
 
     fibers::fiber fiber;

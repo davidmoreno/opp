@@ -2,13 +2,9 @@
 #include "vm.hpp"
 
 int main(){
-  fprintf(stderr, "Start\n");
-  fprintf(stderr, "Count %ld\n", opp::vm.use_count());
+  fprintf(stderr, "Main Start\n");
   opp::start();
-  fprintf(stderr, "Count %ld\n", opp::vm.use_count());
   opp::vm->print_stats();
-  fprintf(stderr, "Stop %ld\n", opp::vm.use_count());
   opp::stop();
-  auto scheduler = boost::fibers::context::active()->get_scheduler();
-  fprintf(stderr, "The final End. %s\n", std::to_string(typeid(scheduler)).c_str());
+  fprintf(stderr, "Main Stop, %ld uses of vm.\n", opp::vm.use_count());
 }

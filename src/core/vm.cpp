@@ -35,7 +35,7 @@ namespace opp{
 
 
   VM::~VM(){
-    fprintf(stderr, "Processes pending: %ld\n", processes.size());
+    // fprintf(stderr, "Processes pending: %ld\n", processes.size());
   }
 
   void VM::start(){
@@ -52,7 +52,7 @@ namespace opp{
         std::unique_lock<std::mutex> lk(running_mutex);
         // this is what makes all the other fibers to run, or this thread to wait.
         running_cond.wait( lk, [this](){ return !this->_running; } );
-        printf("EOT %d\n", i);
+        // fprintf(stderr, "EOT %d\n", i);
       });
     }
     barrier.wait();
@@ -75,7 +75,7 @@ namespace opp{
   void VM::stop(){
     vm->send(exit_msg{vm, 0});
     while(running()){
-      fprintf(stderr, "%s Waiting for stop %d\n", self()->to_string().c_str(), running());
+      // fprintf(stderr, "%s Waiting for stop %d\n", self()->to_string().c_str(), running());
       boost::this_fiber::sleep_for(std::chrono::seconds(1));
     }
 
@@ -84,7 +84,7 @@ namespace opp{
       t.join();
     }
 
-    fprintf(stderr, "Done stop VM. All threads joined. %ld Proceeses still running.\n", processes.size());
+    // fprintf(stderr, "Done stop VM. All threads joined. %ld Proceeses still running.\n", processes.size());
   }
 
   void VM::real_stop(){
@@ -109,7 +109,7 @@ namespace opp{
       if (tostop.size() == 2) // Only vm and main left
         break;
 
-      fprintf(stderr, "Stop %ld processes\n", tostop.size());
+      // fprintf(stderr, "Stop %ld processes\n", tostop.size());
       auto endI = std::rend(tostop);
       for(auto I = std::rbegin(tostop);I!=endI;++I){
         auto pr = *I;
@@ -117,15 +117,15 @@ namespace opp{
           continue;
         if (pr == main) // not on main thread (main)
           continue;
-        fprintf(stderr, "Stopping %s %d\n", pr->to_string().c_str(), pr->running());
+        // fprintf(stderr, "Stopping %s %d\n", pr->to_string().c_str(), pr->running());
         if (pr->running()){
-          std::cerr<<"Stopping "<<pr->to_string()<<std::endl;
+          // fprintf(stderr, "Stopping %s\n", pr->to_string().c_str());
           pr->stop();
           boost::this_fiber::yield();
         }
       }
     }
-    fprintf(stderr, "All process stopped\n");
+    // fprintf(stderr, "All process stopped\n");
     // Manual stop main, no join
     vm->_running=false;
     main->_running=false;
@@ -135,19 +135,19 @@ namespace opp{
 
     // main->message_signal.notify_one();
     // std::cerr<<"VM left "<<vm.use_count()<<std::endl;
-    fprintf(stderr, "All done\n");
+    // fprintf(stderr, "All done\n");
   }
 
   void VM::loop(){
-    fprintf(stderr, "Run VM loop.\n");
+    // fprintf(stderr, "Run VM loop.\n");
     auto self = shared_from_this();
     while(true){
       receive(
         [self](exit_msg exit){
           if (exit.process == vm){
-            fprintf(::stderr, "Stop VM!\n");
+            // fprintf(::stderr, "Stop VM!\n");
             vm->real_stop();
-            fprintf(::stderr, "Throw END\n");
+            // fprintf(::stderr, "Throw END\n");
             throw opp::process_exit(self, 0);
           } else {
             vm->stop(exit.process, exit.code);
@@ -175,14 +175,14 @@ namespace opp{
   }
 
   void VM::start(std::shared_ptr<process> pr){
-    fprintf(stderr, "Starting %s\n", pr->to_string().c_str());
+    // fprintf(stderr, "Starting %s\n", pr->to_string().c_str());
     std::unique_lock<std::mutex> lck(mutex);
     processes.push_back(pr);
     pr->run();
   }
 
   void VM::stop(std::shared_ptr<process> pr, int code){
-    fprintf(stderr, "%s stop process %s %d\n", to_string().c_str(), pr->to_string().c_str(), code);
+    // fprintf(stderr, "%s stop process %s %d\n", to_string().c_str(), pr->to_string().c_str(), code);
     if (self() != vm){
       self()->send(exit_msg{pr, code});
       return;
@@ -199,18 +199,18 @@ namespace opp{
       // processes.erase(pr);
       auto pri = find(processes.begin(), processes.end(), pr);
       if (pri == std::end(processes)){
-        fprintf(stderr, "Process not in vm: %d\n", pr->pid());
+        // fprintf(stderr, "Process not in vm: %d\n", pr->pid());
         return;
       }
       processes.erase(pri);
     }
 
-    fprintf(stderr, "%s wait to finish\n", pr->to_string().c_str());
+    // fprintf(stderr, "%s wait to finish\n", pr->to_string().c_str());
     // Busy wait it to finish.
     if (pr->fiber.joinable())
       pr->fiber.join();
 
-    fprintf(stderr, "%s removed\n", pr->to_string().c_str());
+    // fprintf(stderr, "%s removed\n", pr->to_string().c_str());
   }
 
   void VM::print_stats(){
