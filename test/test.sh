@@ -19,6 +19,7 @@ case "$1" in
     cat ../test/testfile.txt | timeout 5 bin/sbds
     timeout 5 bin/startstop
     echo "test" | timeout 5 bin/test_tcp localhost 1234
+    timeout 5 bin/test_tcp_server localhost 1234
     ;;
   "startstop")
     timeout 15 bin/startstop
@@ -28,6 +29,9 @@ case "$1" in
     ;;
   "tcp")
     echo "test" | timeout 5 bin/test_tcp localhost 1234
+    ;;
+  "tcp_server")
+    timeout 5 bin/test_tcp_server 0.0.0.0 4321
     ;;
 esac
 

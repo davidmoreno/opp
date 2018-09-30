@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <any>
+#include "string.hpp"
 #include "reference.hpp"
 #include "utils.hpp"
 
@@ -57,7 +58,8 @@ namespace opp{
     return match_test{[ref](const std::any &a) -> bool{
       if (a.type() != typeid(A))
         return false;
-      if (std::any_cast<A>(a).ref != ref)
+      auto msgref = std::any_cast<A>(a).ref;
+      if (msgref != ref)
         return false;
       return true;
     }};

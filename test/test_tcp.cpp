@@ -13,7 +13,7 @@ int main(int argc, char **argv){
     return 1;
   }
 
-  auto client = opp::start<opp::tcp_client>(argv[1], argv[2]);
+  auto client = opp::start<opp::io::tcp_client>(argv[1], argv[2]);
   // client->set_debug(true);
   // opp::self()->set_debug(true);
 

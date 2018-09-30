@@ -2,6 +2,7 @@
 
 #include <cxxabi.h>
 #include <string>
+#include <vector>
 
 namespace std{
   inline std::string to_string(const char *str){
@@ -21,6 +22,11 @@ namespace std{
     if (res)
       return std::string(res);
     return ti.name();
+  }
+  inline std::string to_string(const std::vector<uint8_t> &data){
+    std::string ret;
+    std::copy(data.begin(), data.end(), std::back_inserter(ret));
+    return ret;
   }
 
   // inline std::string to_string(const T &c){

@@ -12,7 +12,7 @@
 
 using namespace opp;
 
-tcp_client::tcp_client(std::string address, std::string port) : io::file(address+":"+port, -1){
+io::tcp_client::tcp_client(std::string address, std::string port) : io::file(address+":"+port, -1){
   int sockfd;
   if (debug()){
     OPP_DEBUG("connect to {}:{}", address, port);

@@ -31,6 +31,7 @@ namespace opp::io{
     file(std::string filename);
     ~file();
     void replace_fd(int fd);
+    int get_fd(){ return fd; };
 
     virtual void loop();
     virtual void stop();
@@ -60,3 +61,11 @@ namespace opp::io{
   extern std::shared_ptr<file> stdout;
   extern std::shared_ptr<file> stderr;
 };
+
+namespace std{
+  inline std::string to_string(const opp::io::file::buffer_t &data){
+    std::string ret;
+    std::copy(data.begin(), data.end(), std::back_inserter(ret));
+    return ret;
+  }
+}

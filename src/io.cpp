@@ -11,7 +11,6 @@ namespace opp::io{
   struct print_msg{ std::string str; };
   struct readline_msg{ std::shared_ptr<opp::process> from; };
   struct readline_result_msg{ std::string string; };
-  struct replace_fd_msg{ int fd; };
   struct read_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
   struct write_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
   struct read_result_msg{ reference ref; };
@@ -33,7 +32,10 @@ namespace opp::io{
 
   /// Public API
   void file::replace_fd(int nfd){
-    send(replace_fd_msg{nfd});
+    if (fd != -1){
+      throw opp::io::exception("fd already initialized");
+    }
+    fd = nfd;
   }
 
   void file::print_(std::string str){
@@ -76,7 +78,7 @@ namespace opp::io{
 
   void file::stop(){
     close(fd);
-    fprintf(::stderr, "Force stop %s\n", name().c_str());
+    // fprintf(::stderr, "Force stop %s\n", name().c_str());
     this->process::stop();
   }
 
@@ -108,12 +110,6 @@ namespace opp::io{
       }while(c!='\n');
       msg.from->send(readline_result_msg{ret});
     };
-    auto replace_fd = [this](replace_fd_msg msg){
-      if (fd != -1){
-        throw opp::already_initialized();
-      }
-      fd = msg.fd;
-    };
     auto write = [this](write_msg msg){
       poller->wait_write(fd);
       auto res = ::write(fd, msg.data.data(), msg.data.size());
@@ -144,7 +140,7 @@ namespace opp::io{
     // };
 
     std::initializer_list<match_case> cases = {
-      printfn, readlinefn, replace_fd, write, read
+      printfn, readlinefn, write, read
     };
 
 

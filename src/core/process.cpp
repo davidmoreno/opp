@@ -115,6 +115,10 @@ namespace opp{
   std::any process::receive(
       const std::initializer_list<match_case> cases,
       const std::chrono::seconds &timeout){
+
+    if (opp::self().get() != this){
+      throw opp::exception("I can only receive on my process, not others.");
+    }
     auto maxt = std::chrono::system_clock::now() + timeout;
 
     std::any msg;
