@@ -141,7 +141,7 @@ namespace opp{
     // fprintf(stderr, "Run VM loop.\n");
     auto self = shared_from_this();
     while(true){
-      receive(
+      receive({
         [self](exit_msg exit){
           if (exit.process == vm){
             // fprintf(::stderr, "Stop VM!\n");
@@ -155,9 +155,8 @@ namespace opp{
         },
         [](timeout_msg){
           vm->clean_processes();
-        },
-        std::chrono::seconds(60)
-      );
+        }
+      }, std::chrono::seconds(60));
     }
   }
 

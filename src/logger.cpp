@@ -28,7 +28,7 @@ namespace opp::logger{
   void logger::loop(){
     __logger = this->shared_from_this();
     while(running()){
-      receive(
+      receive({
         [](log_msg msg){
           // from https://stackoverflow.com/questions/9527960/how-do-i-construct-an-iso-8601-datetime-in-c
           time_t now;
@@ -67,7 +67,8 @@ namespace opp::logger{
         },
         [](flush_msg pr){
           pr.process->send(flush_ready_msg{});
-        },
+        }
+      },
         opp::process::FOREVER
       );
     }
@@ -80,6 +81,8 @@ namespace opp::logger{
   /// Blocks until this is processed
   void logger::flush(){
     send(flush_msg{this});
-    self()->receive<flush_ready_msg>();
+    self()->receive({
+      match_type<flush_ready_msg>()
+    });
   }
 }
