@@ -28,15 +28,3 @@ namespace std{
   // }
 
 }
-
-
-namespace opp{
-  template<typename T>
-  std::string concat(T v){
-    return std::to_string(v);
-  }
-  template<typename T, typename... Args>
-  std::string concat(T &first, Args... args){
-    return std::to_string(first) + concat(args...);
-  }
-}

@@ -4,6 +4,7 @@
 #include <memory>
 #include <execinfo.h>
 #include <cxxabi.h>
+#include <fmt/format.h>
 #include "process.hpp"
 #include "string.hpp"
 #include "opp.hpp"
@@ -43,10 +44,9 @@ namespace opp{
     bad_cast(std::string a, std::string b){
       char *adm = abi::__cxa_demangle(a.c_str(), nullptr, nullptr, nullptr);
       char *bdm = abi::__cxa_demangle(b.c_str(), nullptr, nullptr, nullptr);
-      msg = concat(
-        "Bad cast. From ",
+      msg = fmt::format(
+        "Bad cast. From {} to {}",
         adm ? adm : a,
-        " to ",
         bdm ? bdm : b
       );
     }
@@ -56,14 +56,14 @@ namespace opp{
   public:
     bad_receiver(std::shared_ptr<opp::process> pr) : process_exception(pr){
       // print_backtrace();
-      msg = concat("bad receiver. Should be ", to_string(pr));
+      msg = fmt::format("bad receiver. Should be {}", to_string(pr));
     };
   };
 
   class process_timeout : public opp::process_exception {
   public:
     process_timeout(std::shared_ptr<opp::process> pr) : process_exception(pr){
-      msg = concat("timeout ", to_string(pr));
+      msg = fmt::format("timeout {}", to_string(pr));
     };
   };
 
@@ -75,7 +75,7 @@ namespace opp{
         fprintf(::stderr, "%s Exit process, code %d\n", pr->to_string().c_str(), _code);
         print_backtrace(pr->to_string());
       }
-      msg = concat("exit #", pr->pid(), "<", pr->name(), "> code: ", _code, " at #", self()->pid(), "<", self()->name(), ">");
+      msg = fmt::format("exit #{} <{}> code: {} at #{} <{}>", pr->pid(), pr->name(), _code, self()->pid(), self()->name());
     };
   };
 

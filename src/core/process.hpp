@@ -14,6 +14,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <fmt/format.h>
 #include "string.hpp"
 #include "match.hpp"
 #include "utils.hpp"
@@ -73,9 +74,9 @@ namespace opp {
     std::any receive(
         const std::initializer_list<match_case> cases,
         const std::chrono::seconds &timeout=std::chrono::seconds(5));
-        
+
     std::string to_string(){
-      return ::opp::concat("[#", pid(), " ", name(), "]");
+      return fmt::format("[#{} {}]", pid(), name());
     }
   private:
     void maybe_exit_or_timeout(std::list<std::any>::iterator &);

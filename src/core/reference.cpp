@@ -1,8 +1,9 @@
 #include <sstream>
+#include <atomic>
 #include "reference.hpp"
 
 // Just a counter
-static int reference_id = 1;
+static std::atomic<int> reference_id = 1;
 
 opp::reference::reference(){
   _id = reference_id++;

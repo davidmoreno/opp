@@ -56,11 +56,9 @@ namespace opp::logger{
 
           std::string _name = msg.pid->to_string();
 
-          opp::io::stderr->println(term::color(
-            opp::concat(
-              _name, " ",
-              "[", timestamp, "] ",
-              "[", filename, ":", msg.lineno, "]\t"
+          opp::io::stderr->println("{} {}", term::color(
+            fmt::format("{} [{}] [{}:{}]",
+              _name, timestamp, filename, msg.lineno
             ), color),
             msg.message
           ); //term::color("msg"), term::RED);

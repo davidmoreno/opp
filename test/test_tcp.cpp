@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <fmt/format.h>
 #include "tcp_client.hpp"
 #include "logger.hpp"
 
@@ -20,7 +21,7 @@ int main(int argc, char **argv){
   std::string str;
   unsigned int n=0;
   while(!client->eof()){
-    client->write(opp::concat("This is a test ", n, "\n"));
+    client->write(fmt::format("This is a test {}\n", n));
     client->read(data);
 
     // str.clear();

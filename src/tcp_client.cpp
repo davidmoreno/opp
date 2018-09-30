@@ -14,7 +14,9 @@ using namespace opp;
 
 tcp_client::tcp_client(std::string address, std::string port) : io::file(address+":"+port, -1){
   int sockfd;
-  OPP_DEBUG("connect to ", address, ":", port);
+  if (debug()){
+    OPP_DEBUG("connect to {}:{}", address, port);
+  }
 
   struct addrinfo hints, *servers;
   memset (&hints, 0, sizeof (hints));
@@ -52,8 +54,9 @@ tcp_client::tcp_client(std::string address, std::string port) : io::file(address
       inet_ntop (serverI->ai_family, ptr, addrstr, sizeof(addrstr));
 
       OPP_DEBUG(
-        "Try connect IPv", serverI->ai_family == PF_INET6 ? 6 : 4,
-        " address: ", addrstr, " (", serverI->ai_canonname, ") port ",
+        "Try connect IPv{} address: {} ({}:{})",
+        serverI->ai_family == PF_INET6 ? 6 : 4,
+        addrstr, serverI->ai_canonname,
         port
       );
     }

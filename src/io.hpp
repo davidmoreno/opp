@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/format.h>
 #include "core/process.hpp"
 #include "core/exceptions.hpp"
 #include "core/string.hpp"
@@ -47,11 +48,11 @@ namespace opp::io{
     // out funcs
     template<typename... Args>
     void print(Args ...args){
-      print_(concat(args...));
+      print_(fmt::format(args...));
     }
     template<typename... Args>
     void println(Args... args){
-      print_(concat(args..., '\n'));
+      print_(fmt::format(args...) + "\n");
     }
   };
 

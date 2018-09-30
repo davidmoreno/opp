@@ -2,6 +2,9 @@
 
 #include <libgen.h>
 #include <string.h>
+#include <memory.h>
+#include <fmt/format.h>
+#include "core/process.hpp"
 #include "core/string.hpp"
 
 #define OPP_DEBUG(...) opp::logger::log(__FILE__, __LINE__, opp::logger::DEBUG, __VA_ARGS__)
@@ -38,7 +41,7 @@ namespace opp::logger{
 
   template<typename... Args>
   static void log(const char *filename, int lineno, LogLevel loglevel, Args... args){
-    auto str = concat(args...);
+    auto str = fmt::format(args...);
     if (!__logger){
       char *filename2 = strdupa(filename);
       fprintf(::stderr, "%s:%d %s", basename(filename2), lineno, (str + "\n").c_str());
