@@ -16,6 +16,7 @@
 #include <memory>
 #include "string.hpp"
 #include "match.hpp"
+#include "utils.hpp"
 
 namespace fibers = boost::fibers;
 
@@ -63,14 +64,6 @@ namespace opp {
   inline std::string get_type_names(){
     return std::string("");
   }
-
-  /// Can destructore the type of the argument of a lambda
-  template <typename T>
-  struct lambda_arg : public lambda_arg<decltype(&T::operator())>{};
-  template <typename ClassType, typename ArgType>
-  struct lambda_arg<void (ClassType::*) (ArgType args) const> {
-      using type = ArgType;
-  };
 
   class process : public std::enable_shared_from_this<process>{
     std::string _name;
@@ -125,6 +118,8 @@ namespace opp {
         for (auto I = messages.begin();I!=endI;++I){
           auto &msg = *I;
           if (test.test(msg)){
+            auto msg = *I;
+            messages.erase(I);
             return msg;
           }
         }
@@ -158,6 +153,55 @@ namespace opp {
       throw_exit(2); // impossible situation
       return false;
     }
+    std::any receive(
+        const std::initializer_list<match_case> cases,
+        const std::chrono::seconds &timeout=std::chrono::seconds(5)){
+      auto maxt = std::chrono::system_clock::now() + timeout;
+
+      std::any msg;
+
+      // First try all messages in queue.
+      auto endI = messages.end();
+      for (auto match: cases){
+        for (auto I = messages.begin();I!=endI;++I){
+          auto &msg = *I;
+          if (match.test(msg)){
+            auto msg = *I;
+            messages.erase(I);
+            return match.then(msg);
+          }
+        }
+      }
+      for (auto I = messages.begin();I!=endI;++I){
+        maybe_exit_or_timeout(*I);
+      }
+
+      while(running()){
+        // Now get a new message or timeout
+        auto res = inqueue.pop_wait_until(msg, maxt);
+        if (res == fibers::channel_op_status::timeout)
+          msg = timeout_msg{shared_from_this()}; // FIXME? If timeout and not waiting for TO, exception.
+        if (res != fibers::channel_op_status::success)
+          throw_exit(1);
+
+        // Try new message on all the cases
+        for (auto match: cases){
+          if (match.test(msg)){
+            return match.then(msg);
+          }
+        }
+
+        maybe_exit_or_timeout(msg);
+
+        // If got here, maybe later wil be received. Now just push at the front the new value
+        // This is nice as we use lists.
+        messages.push_front(std::move(msg));
+      }
+
+      throw_exit(2); // impossible situation
+      return false;
+    }
+
 
 
     // returns or blocks. Filter is called on each function to know if
@@ -186,7 +230,7 @@ namespace opp {
         throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
-      using TA = typename lambda_arg<A>::type;
+      using TA = typename ::opp::utils::lambda_arg<A>::type;
 
       auto [pos, el] = get_any<TA>(until);
       if (pos == 0){
@@ -202,8 +246,8 @@ namespace opp {
         throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
-      using TA = typename lambda_arg<A>::type;
-      using TB = typename lambda_arg<B>::type;
+      using TA = typename ::opp::utils::lambda_arg<A>::type;
+      using TB = typename ::opp::utils::lambda_arg<B>::type;
 
       auto [pos, el] = get_any<TA, TB>(until);
       if (pos == 0){
@@ -222,9 +266,9 @@ namespace opp {
         throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
-      using TA = typename lambda_arg<A>::type;
-      using TB = typename lambda_arg<B>::type;
-      using TC = typename lambda_arg<C>::type;
+      using TA = typename ::opp::utils::lambda_arg<A>::type;
+      using TB = typename ::opp::utils::lambda_arg<B>::type;
+      using TC = typename ::opp::utils::lambda_arg<C>::type;
 
       auto [pos, el] = get_any<TA, TB, TC>(until);
       if (pos == 0){
@@ -246,10 +290,10 @@ namespace opp {
         throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
-      using TA = typename lambda_arg<A>::type;
-      using TB = typename lambda_arg<B>::type;
-      using TC = typename lambda_arg<C>::type;
-      using TD = typename lambda_arg<D>::type;
+      using TA = typename ::opp::utils::lambda_arg<A>::type;
+      using TB = typename ::opp::utils::lambda_arg<B>::type;
+      using TC = typename ::opp::utils::lambda_arg<C>::type;
+      using TD = typename ::opp::utils::lambda_arg<D>::type;
 
       auto [pos, el] = get_any<TA, TB, TC, TD>(until);
       if (pos == 0){
@@ -274,11 +318,11 @@ namespace opp {
         throw_bad_receiver();
 
       auto until = std::chrono::system_clock::now() + timeout;
-      using TA = typename lambda_arg<A>::type;
-      using TB = typename lambda_arg<B>::type;
-      using TC = typename lambda_arg<C>::type;
-      using TD = typename lambda_arg<D>::type;
-      using TE = typename lambda_arg<E>::type;
+      using TA = typename ::opp::utils::lambda_arg<A>::type;
+      using TB = typename ::opp::utils::lambda_arg<B>::type;
+      using TC = typename ::opp::utils::lambda_arg<C>::type;
+      using TD = typename ::opp::utils::lambda_arg<D>::type;
+      using TE = typename ::opp::utils::lambda_arg<E>::type;
 
       auto [pos, el] = get_any<TA, TB, TC, TD, TE>(until);
       if (pos == 0){

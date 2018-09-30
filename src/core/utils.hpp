@@ -23,4 +23,12 @@ namespace opp::utils{
     return retval;
   }
 
+  /// Can destructore the type of the argument of a lambda
+  template <typename T>
+  struct lambda_arg : public lambda_arg<decltype(&T::operator())>{};
+  template <typename ClassType, typename ArgType>
+  struct lambda_arg<void (ClassType::*) (ArgType args) const> {
+      using type = ArgType;
+  };
+
 }

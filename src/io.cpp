@@ -42,8 +42,10 @@ namespace opp::io{
 
   std::string file::readline(){
     send(readline_msg{opp::self()});
-    auto res = opp::self()->receive<readline_result_msg>(process::FOREVER);
-    return res.string;
+    auto res = opp::self()->receive({
+      match_type<readline_result_msg>()
+    }, process::FOREVER);
+    return std::any_cast<readline_result_msg>(res).string;
   }
 
   void file::write(const std::string &str){
@@ -141,8 +143,13 @@ namespace opp::io{
     //   }}
     // };
 
+    std::initializer_list<match_case> cases = {
+      printfn, readlinefn, replace_fd, write, read
+    };
+
+
     while(running()){ // This will exit because of an exception when closed
-      receive(printfn, readlinefn, replace_fd, write, read, FOREVER);
+      receive(cases, FOREVER);
     }
   }
 }
