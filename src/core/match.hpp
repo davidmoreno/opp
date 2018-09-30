@@ -21,6 +21,8 @@ namespace opp{
         std::function<std::any(std::any)> then_) : test(test_), then(then_
       ) { }
 
+    match_case(match_test t);
+
     template<typename A>
     match_case(A fun){
       using TA = typename ::opp::utils::lambda_arg<A>::type;
@@ -30,6 +32,7 @@ namespace opp{
         return std::any();
       };
     }
+
   };
 
   struct match_test{
