@@ -4,6 +4,7 @@
 #include "core/opp.hpp"
 #include "logger.hpp"
 #include "poller.hpp"
+#include "core/reference.hpp"
 #include "core/exceptions.hpp"
 
 namespace opp::io{
@@ -11,10 +12,10 @@ namespace opp::io{
   struct readline_msg{ std::shared_ptr<opp::process> from; };
   struct readline_result_msg{ std::string string; };
   struct replace_fd_msg{ int fd; };
-  struct read_msg{ file::buffer_t &data; std::shared_ptr<opp::process> from; };
-  struct write_msg{ file::buffer_t &data; std::shared_ptr<opp::process> from; };
-  struct read_result_msg{};
-  struct write_result_msg{};
+  struct read_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct write_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct read_result_msg{ reference ref; };
+  struct write_result_msg{ reference ref; };
 
   std::shared_ptr<file> stdin;
   std::shared_ptr<file> stdout;
@@ -52,13 +53,19 @@ namespace opp::io{
   }
 
   void file::write(buffer_t &data){
-    send(write_msg{data, self()});
-    self()->receive<write_result_msg>();
+    auto ref = make_reference();
+    send(write_msg{ref, data, self()});
+    self()->receive({
+      match_ref<write_result_msg>(ref)
+    });
   }
 
   void file::read(buffer_t &data){
-    send(read_msg{data, self()});
-    self()->receive<read_result_msg>();
+    auto ref = make_reference();
+    send(read_msg{ref, data, self()});
+    self()->receive({
+      match_ref<read_result_msg>(ref)
+    });
   }
 
   bool file::eof(){
@@ -111,7 +118,7 @@ namespace opp::io{
       if (res<0){
         throw opp::io::write_error();
       }
-      msg.from->send(write_result_msg{});
+      msg.from->send(write_result_msg{msg.ref});
     };
     auto read = [this](read_msg msg){
       poller->wait_read(fd);
@@ -119,7 +126,7 @@ namespace opp::io{
       if (res<0){
         throw opp::io::write_error();
       }
-      msg.from->send(read_result_msg{});
+      msg.from->send(read_result_msg{msg.ref});
     };
 
     // std::map<symbol, std::function<void(const std::any &)>> _case = {

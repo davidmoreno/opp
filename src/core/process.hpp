@@ -15,6 +15,7 @@
 #include <iostream>
 #include <memory>
 #include "string.hpp"
+#include "match.hpp"
 
 namespace fibers = boost::fibers;
 
@@ -111,11 +112,53 @@ namespace opp {
     void monitor();
     void demonitor();
 
-    // FIXME. This is the lazy wait. On all send will check the full queue.
-    // The nice way would be on each receive first check the message queue, and
-    // then wait for my message.
-    // We do it first like this as its easier to ust check the full queue
-    // in a loop.
+    std::any receive(
+        const std::initializer_list<match_test> cases,
+        const std::chrono::seconds &timeout=std::chrono::seconds(5)){
+      auto maxt = std::chrono::system_clock::now() + timeout;
+
+      std::any msg;
+
+      // First try all messages in queue.
+      auto endI = messages.end();
+      for (auto test: cases){
+        for (auto I = messages.begin();I!=endI;++I){
+          auto &msg = *I;
+          if (test.test(msg)){
+            return msg;
+          }
+        }
+      }
+      for (auto I = messages.begin();I!=endI;++I){
+        maybe_exit_or_timeout(*I);
+      }
+
+      while(running()){
+        // Now get a new message or timeout
+        auto res = inqueue.pop_wait_until(msg, maxt);
+        if (res == fibers::channel_op_status::timeout)
+          msg = timeout_msg{shared_from_this()}; // FIXME? If timeout and not waiting for TO, exception.
+        if (res != fibers::channel_op_status::success)
+          throw_exit(1);
+
+        // Try new message on all the cases
+        for (auto test: cases){
+          if (test.test(msg)){
+            return msg;
+          }
+        }
+
+        maybe_exit_or_timeout(msg);
+
+        // If got here, maybe later wil be received. Now just push at the front the new value
+        // This is nice as we use lists.
+        messages.push_front(std::move(msg));
+      }
+
+      throw_exit(2); // impossible situation
+      return false;
+    }
+
 
     // returns or blocks. Filter is called on each function to know if
     // thats what you were waiting for. The process may loose the thread.
@@ -317,6 +360,7 @@ namespace opp {
     }
   private:
     void maybe_exit_or_timeout(std::list<std::any>::iterator &);
+    void maybe_exit_or_timeout(const std::any &);
     void base_loop();
 
     // I dont know about the exceptions here, as they reference the same class. Need to do some tricks.

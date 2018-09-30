@@ -30,6 +30,16 @@ namespace opp{
       throw opp::process_timeout(m.process);
     }
   }
+  void process::maybe_exit_or_timeout(const std::any &msg){
+    if (msg.type() == typeid(exit_msg)){
+      auto m = std::any_cast<exit_msg>(msg);
+      throw opp::process_exit(m.process, m.code);
+    }
+    if (msg.type() == typeid(timeout_msg)){
+      auto m = std::any_cast<timeout_msg>(msg);
+      throw opp::process_timeout(m.process);
+    }
+  }
 
   process::process(std::string name) : _name(std::move(name)), inqueue(OPP_MAX_CHANNEL_SIZE){
     // printf("%s: New process %p\n", _name.c_str(), this);

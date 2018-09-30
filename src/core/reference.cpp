@@ -8,7 +8,7 @@ opp::reference::reference(){
   _id = reference_id++;
 }
 
-std::string opp::reference::to_string(){
+std::string opp::reference::to_string() const{
   std::stringstream ss;
   ss<<"[#";
   ss<<_id;
