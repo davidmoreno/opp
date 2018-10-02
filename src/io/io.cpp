@@ -13,6 +13,7 @@ namespace opp::io{
   struct readline_result_msg{ std::string string; };
   struct read_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
   struct write_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct close_msg{};
   struct read_result_msg{ reference ref; };
   struct write_result_msg{ reference ref; };
 
@@ -27,7 +28,7 @@ namespace opp::io{
   }
 
   file::~file(){
-    close(fd);
+    close();
   }
 
   /// Public API
@@ -51,7 +52,8 @@ namespace opp::io{
   }
 
   void file::write(const std::string &str){
-    auto data = buffer_t(str.size());
+    auto data = buffer_t();
+    data.reserve(str.size());
     std::copy(str.begin(), str.end(), std::back_inserter(data));
     write(data);
   }
@@ -77,11 +79,14 @@ namespace opp::io{
   }
 
   void file::stop(){
-    close(fd);
+    close();
     // fprintf(::stderr, "Force stop %s\n", name().c_str());
     this->process::stop();
   }
 
+  void file::close(){
+    send(close_msg{});
+  }
 
   /// Server impl
   void file::loop(){
@@ -126,6 +131,10 @@ namespace opp::io{
       }
       msg.from->send(read_result_msg{msg.ref});
     };
+    auto closef = [this](close_msg c){
+      ::close(fd);
+      fd = -1;
+    };
 
     // std::map<symbol, std::function<void(const std::any &)>> _case = {
     //   {PRINT, [&printfn](const std::any &args){
@@ -140,7 +149,7 @@ namespace opp::io{
     // };
 
     std::initializer_list<match_case> cases = {
-      printfn, readlinefn, write, read
+      printfn, readlinefn, write, read, closef
     };
 
 

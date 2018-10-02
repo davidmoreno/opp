@@ -35,6 +35,7 @@ namespace opp::io{
 
     virtual void loop();
     virtual void stop();
+    virtual void close();
 
     // io funcs
     std::string readline();

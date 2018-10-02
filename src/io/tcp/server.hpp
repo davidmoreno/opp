@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include "../io.hpp"
 
 namespace opp::io::tcp{
@@ -13,6 +14,6 @@ namespace opp::io::tcp{
 
     void loop();
 
-    std::shared_ptr<peer> wait_peer();
+    std::shared_ptr<peer> wait_peer(std::chrono::seconds secs=std::chrono::seconds(5));
   };
 }

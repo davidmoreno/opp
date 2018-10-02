@@ -33,7 +33,7 @@ opp::io::tcp::server::server(std::string address, std::string port) : opp::io::f
   sa.sin_port = htons(atoi(port.c_str()));
 
   if (bind(socket_fd, (struct sockaddr *)&sa, sizeof(sa)) == -1){
-    close(socket_fd);
+    ::close(socket_fd);
     throw opp::io::exception(fmt::format("bind port failed {}:{}", address, port));
   }
   replace_fd(socket_fd);
@@ -62,11 +62,11 @@ void opp::io::tcp::server::loop(){
   }
 }
 
-std::shared_ptr<opp::io::tcp::peer> opp::io::tcp::server::wait_peer(){
+std::shared_ptr<opp::io::tcp::peer> opp::io::tcp::server::wait_peer(std::chrono::seconds wait){
   auto ref = opp::make_reference();
   this->send(wait_peer_msg{ref, self()});
   auto msg = self()->receive({
     match_ref<peer_msg>(ref)
-  });
+  }, wait);
   return std::any_cast<peer_msg>(msg).peer;
 }

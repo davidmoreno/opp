@@ -71,7 +71,7 @@ io::tcp::client::client(std::string address, std::string port) : io::file(addres
       connected = true;
       break;
     }
-    close(sockfd);
+    ::close(sockfd);
 
     serverI = serverI->ai_next;
   }

@@ -33,6 +33,9 @@ case "$1" in
   "tcp_server")
     timeout 5 bin/test_tcp_server 0.0.0.0 4321
     ;;
+  "http")
+    timeout 5 bin/test_http_server 0.0.0.0 4321
+    ;;
 esac
 
 echo "---"

@@ -11,3 +11,6 @@ target_link_libraries(startstop ${CONAN_LIBS} opp -pthread)
 
 add_executable(test_tcp_server test_tcp_server.cpp)
 target_link_libraries(test_tcp_server ${CONAN_LIBS} opp -pthread)
+
+add_executable(test_http_server test_http_server.cpp)
+target_link_libraries(test_http_server ${CONAN_LIBS} opp -pthread)
