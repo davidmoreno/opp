@@ -7,12 +7,12 @@
 #include <arpa/inet.h>
 
 
-#include "tcp_client.hpp"
-#include "logger.hpp"
+#include "client.hpp"
+#include "../../logger.hpp"
 
 using namespace opp;
 
-io::tcp_client::tcp_client(std::string address, std::string port) : io::file(address+":"+port, -1){
+io::tcp::client::client(std::string address, std::string port) : io::file(address+":"+port, -1){
   int sockfd;
   if (debug()){
     OPP_DEBUG("connect to {}:{}", address, port);

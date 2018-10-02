@@ -11,7 +11,7 @@
 #include "vm.hpp"
 #include "process.hpp"
 #include "term.hpp"
-#include "../io.hpp" // FIXME separation of concerns violation
+#include "../io/io.hpp" // FIXME separation of concerns violation
 #include "../logger.hpp"
 #include "extra/thread_barrier.hpp"
 

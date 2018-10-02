@@ -2,8 +2,8 @@ add_library(opp SHARED
   # this adds the basic core processes and vm
   $<TARGET_OBJECTS:opp_core>
   # and now the opp. The core can not access the opp.
-  io.cpp poller.cpp logger.cpp task.cpp supervisor.cpp
-  tcp_client.cpp tcp_server.cpp
+  poller.cpp logger.cpp task.cpp supervisor.cpp
+  io/io.cpp io/tcp/client.cpp io/tcp/server.cpp
 )
 
 add_subdirectory(core)

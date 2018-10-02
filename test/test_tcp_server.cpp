@@ -1,8 +1,8 @@
 #include <string>
 #include <vector>
 #include <fmt/format.h>
-#include "tcp_server.hpp"
-#include "tcp_peer.hpp"
+#include "io/tcp/server.hpp"
+#include "io/tcp/peer.hpp"
 #include "string.hpp"
 #include "logger.hpp"
 #include "vm.hpp"
@@ -17,7 +17,7 @@ int main(int argc, char **argv){
     return 1;
   }
 
-  auto server = opp::start<opp::io::tcp_server>(argv[1], argv[2]);
+  auto server = opp::start<opp::io::tcp::server>(argv[1], argv[2]);
   // client->set_debug(true);
   // opp::self()->set_debug(true);
 

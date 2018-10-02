@@ -1,6 +1,6 @@
 #include <map>
 #include <iostream>
-#include "io.hpp"
+#include "io/io.hpp"
 #include "logger.hpp"
 #include "core/term.hpp"
 #include "core/vm.hpp"

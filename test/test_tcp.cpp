@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 #include <fmt/format.h>
-#include "tcp_client.hpp"
+#include "io/tcp/client.hpp"
 #include "logger.hpp"
 
 int main(int argc, char **argv){
@@ -13,7 +13,7 @@ int main(int argc, char **argv){
     return 1;
   }
 
-  auto client = opp::start<opp::io::tcp_client>(argv[1], argv[2]);
+  auto client = opp::start<opp::io::tcp::client>(argv[1], argv[2]);
   // client->set_debug(true);
   // opp::self()->set_debug(true);
 

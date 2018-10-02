@@ -6,13 +6,13 @@
 #include "poller.hpp"
 #include "process.hpp"
 #include "logger.hpp"
-#include "tcp_server.hpp"
-#include "tcp_peer.hpp"
+#include "server.hpp"
+#include "peer.hpp"
 
 struct wait_peer_msg{ opp::reference ref; std::shared_ptr<opp::process> from; };
-struct peer_msg{ opp::reference ref; std::shared_ptr<opp::io::tcp_peer> peer; };
+struct peer_msg{ opp::reference ref; std::shared_ptr<opp::io::tcp::peer> peer; };
 
-opp::io::tcp_server::tcp_server(std::string address, std::string port) : io::file(address+":"+port, -1){
+opp::io::tcp::server::server(std::string address, std::string port) : opp::io::file(address+":"+port, -1){
   auto socket_fd = socket(PF_INET, SOCK_STREAM, 0);
 
   {
@@ -40,7 +40,7 @@ opp::io::tcp_server::tcp_server(std::string address, std::string port) : io::fil
   // receive listens at main_loop
 }
 
-void opp::io::tcp_server::loop(){
+void opp::io::tcp::server::loop(){
   struct sockaddr_in isa;
   int socket_fd = get_fd();
   // OPP_DEBUG("Waiting connections at {}, fd: {}", name(), get_fd());
@@ -54,7 +54,7 @@ void opp::io::tcp_server::loop(){
         if (peer_fd<0){
           OPP_ERROR("Error accepting connection.");
         }
-        auto peer = opp::start<opp::io::tcp_peer>(peer_fd);
+        auto peer = opp::start<opp::io::tcp::peer>(peer_fd);
         // OPP_DEBUG("Send peer {} to: {}", std::to_string(peer), std::to_string(msg.from));
         msg.from->send(peer_msg{ msg.ref, peer });
       }
@@ -62,7 +62,7 @@ void opp::io::tcp_server::loop(){
   }
 }
 
-std::shared_ptr<opp::io::tcp_peer> opp::io::tcp_server::wait_peer(){
+std::shared_ptr<opp::io::tcp::peer> opp::io::tcp::server::wait_peer(){
   auto ref = opp::make_reference();
   this->send(wait_peer_msg{ref, self()});
   auto msg = self()->receive({
