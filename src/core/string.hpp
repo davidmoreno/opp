@@ -6,7 +6,8 @@
 #include <vector>
 
 namespace opp::string{
-  inline bool startswith(std::string_view str, std::string_view prefix){
+  /// Checks teh first string starts with the second string prefix
+  inline bool startswith(const std::string_view &str, const std::string_view &prefix){
     return std::mismatch(str.begin(), str.end(), prefix.begin()).second == prefix.end();
   }
   inline std::vector<std::string_view> split(std::string_view str, std::string_view separator = " "){
@@ -34,6 +35,25 @@ namespace opp::string{
       ret.push_back(str.substr(lastI, I - lastI));
 
     return ret;
+  }
+  inline std::string_view strip(std::string_view str){
+    // trim start
+    auto strsize = str.size();
+    decltype(strsize) start;
+    for (start=0; start<strsize; start++){
+      if (!isspace(str[start]))
+        break;
+    }
+    str = str.substr(start, strsize);
+    // trim end
+    strsize = str.size();
+    int end;
+    for (end=strsize; strsize>0;){
+      if (!isspace(str[end]))
+        break;
+      end--;
+    }
+    return str.substr(0, end+1);
   }
 }
 
