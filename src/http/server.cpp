@@ -26,7 +26,7 @@ void opp::http::server::loop(){
 }
 
 void opp::http::server::serve(std::shared_ptr<opp::io::tcp::peer> peer){
-  opp::io::file::buffer_t data(1024); // no request bigger than this
+  opp::io::buffer_t data(1024); // no request bigger than this
 
   peer->read(data);
   auto reqstr = std::to_string(data);
@@ -42,6 +42,7 @@ void opp::http::server::serve(std::shared_ptr<opp::io::tcp::peer> peer){
   }
 
   OPP_DEBUG("{}", std::to_string(lines));
+  opp::io::buffer_t data(1024); // no request bigger than this
 
   peer->close();
 }

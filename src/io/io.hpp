@@ -21,12 +21,49 @@ namespace opp::io{
     read_error() : exception("read error"){}
   };
 
+  class buffer_t{
+    std::vector<int8_t> data_;
+    int32_t size_;
+  public:
+    buffer_t(uint32_t capacity) : data_(capacity), size_(0){}
+    buffer_t(const std::string &str) : data_(str.size()), size_(str.size()){
+      int i=0;
+      for(auto c: str){
+        data_[i++] = c;
+      }
+    }
+    void set_size(int32_t size){
+      if (size>data_.capacity())
+        throw opp::exception("Size is bigger than capacity");
+      size_ = size;
+    }
+    int32_t size(){
+      return size_;
+    }
+    int32_t capacity(){
+      return data_.size();
+    }
+    int8_t *data(){
+      return data_.data();
+    }
+    int8_t *begin(){
+      return data();
+    }
+    int8_t *end(){
+      return data()+size_;
+    }
+    const int8_t *begin() const{
+      return data_.data();
+    }
+    const int8_t *end() const{
+      return begin()+size_;
+    }
+  };
+
   class file : public opp::process{
     std::string filename;
     int fd;
   public:
-    using buffer_t = std::vector<int8_t>;
-
     file(std::string filename, int fd);
     file(std::string filename);
     ~file();
@@ -64,7 +101,7 @@ namespace opp::io{
 };
 
 namespace std{
-  inline std::string to_string(const opp::io::file::buffer_t &data){
+  inline std::string to_string(const opp::io::buffer_t &data){
     std::string ret;
     std::copy(data.begin(), data.end(), std::back_inserter(ret));
     return ret;

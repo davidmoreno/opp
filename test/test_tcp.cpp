@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <fmt/format.h>
+#include "io/io.hpp"
 #include "io/tcp/client.hpp"
 #include "logger.hpp"
 
@@ -17,7 +18,7 @@ int main(int argc, char **argv){
   // client->set_debug(true);
   // opp::self()->set_debug(true);
 
-  std::vector<int8_t> data(1024);
+  opp::io::buffer_t data(1024);
   std::string str;
   unsigned int n=0;
   while(!client->eof()){

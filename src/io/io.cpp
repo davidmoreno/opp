@@ -11,8 +11,8 @@ namespace opp::io{
   struct print_msg{ std::string str; };
   struct readline_msg{ std::shared_ptr<opp::process> from; };
   struct readline_result_msg{ std::string string; };
-  struct read_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
-  struct write_msg{ reference ref; file::buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct read_msg{ reference ref; buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct write_msg{ reference ref; buffer_t &data; std::shared_ptr<opp::process> from; };
   struct close_msg{};
   struct read_result_msg{ reference ref; };
   struct write_result_msg{ reference ref; };
@@ -52,9 +52,7 @@ namespace opp::io{
   }
 
   void file::write(const std::string &str){
-    auto data = buffer_t();
-    data.reserve(str.size());
-    std::copy(str.begin(), str.end(), std::back_inserter(data));
+    auto data = buffer_t(str);
     write(data);
   }
 
@@ -125,10 +123,11 @@ namespace opp::io{
     };
     auto read = [this](read_msg msg){
       poller->wait_read(fd);
-      auto res = ::read(fd, msg.data.data(), msg.data.size());
+      auto res = ::read(fd, msg.data.data(), msg.data.capacity());
       if (res<0){
         throw opp::io::write_error();
       }
+      msg.data.set_size(res);
       msg.from->send(read_result_msg{msg.ref});
     };
     auto closef = [this](close_msg c){

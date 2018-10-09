@@ -26,7 +26,7 @@ int main(int argc, char **argv){
     // OPP_INFO("New peer {}", std::to_string(peer));
 
     opp::task::start([peer]{
-      opp::io::file::buffer_t data(1024);
+      opp::io::buffer_t data(1024);
       peer->read(data);
       OPP_INFO("Got {}", std::to_string(data));
       peer->stop();
