@@ -6,6 +6,7 @@
 #include "string.hpp"
 #include "request.hpp"
 #include "response.hpp"
+#include "logger.hpp"
 #include "core/exceptions.hpp"
 
 namespace opp::http{
@@ -25,13 +26,15 @@ namespace opp::http{
     url(std::pair<std::string, handler_f> pair) : path(pair.first), next(pair.second) {}
     url(std::pair<std::string, url_v> pair) : path(pair.first), next(pair.second) {}
 
-    std::optional<handler_f> find(std::string_view request_path){
+    std::optional<handler_f> find(const std::string_view &request_path){
       if (::opp::string::startswith(request_path, path)){
         if (std::holds_alternative<url_v>(next)){
+          std::string_view subpath = request_path.substr(path.size(), 10000);
           for (auto &url: std::get<url_v>(next)){
-            auto res = url.find(request_path.substr(path.size(), 10000));
-            if (res)
+            auto res = url.find(subpath);
+            if (res){
               return res;
+            }
           }
         }
         if (std::holds_alternative<handler_f>(next)){

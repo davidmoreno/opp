@@ -37,20 +37,23 @@ namespace opp::io{
         throw opp::exception("Size is bigger than capacity");
       size_ = size;
     }
-    int32_t size(){
+    int32_t size() const{
       return size_;
     }
-    int32_t capacity(){
+    int32_t capacity() const{
       return data_.size();
     }
     int8_t *data(){
       return data_.data();
     }
+    const int8_t *data() const{
+      return data_.data();
+    }
     int8_t *begin(){
-      return data();
+      return data_.data();
     }
     int8_t *end(){
-      return data()+size_;
+      return data_.data()+size_;
     }
     const int8_t *begin() const{
       return data_.data();
