@@ -36,6 +36,9 @@ case "$1" in
   "http")
     timeout 5 bin/test_http_server 0.0.0.0 4321
     ;;
+  "string")
+    bin/string_test
+    ;;
 esac
 
 echo "---"
