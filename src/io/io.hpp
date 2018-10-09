@@ -32,7 +32,7 @@ namespace opp::io{
         data_[i++] = c;
       }
     }
-    void set_size(int32_t size){
+    void set_size(uint32_t size){
       if (size>data_.capacity())
         throw opp::exception("Size is bigger than capacity");
       size_ = size;

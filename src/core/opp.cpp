@@ -40,7 +40,7 @@ namespace opp{
     char **messages = (char **)NULL;
     char temp[256];
     char temp2[256];
-    int i;
+    uint i;
     const char *cname = name.c_str();
 
     messages = backtrace_symbols(trace, trace_size);

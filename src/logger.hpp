@@ -40,7 +40,7 @@ namespace opp::logger{
   };
 
   template<typename... Args>
-  static void log(const char *filename, int lineno, LogLevel loglevel, Args... args){
+  inline void log(const char *filename, int lineno, LogLevel loglevel, Args... args){
     auto str = fmt::format(args...);
     if (!__logger){
       char *filename2 = strdupa(filename);
@@ -50,7 +50,7 @@ namespace opp::logger{
     }
   }
 
-  static void flush(){
+  inline void flush(){
     auto myl = __logger;
     myl->flush();
   }

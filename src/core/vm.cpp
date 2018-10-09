@@ -44,7 +44,7 @@ namespace opp{
 
     thread_barrier barrier(nworkers);
     boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >(nworkers, true);
-    for (int i=0; i<nworkers-1; ++i){
+    for (uint i=0; i<nworkers-1; ++i){
       workers.emplace_back([this, &barrier, i](){
         boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing>(nworkers, true);
         barrier.wait();
