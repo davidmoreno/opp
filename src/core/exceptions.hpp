@@ -32,11 +32,11 @@ namespace opp{
   public:
     std::shared_ptr<opp::process> process;
     process_exception(std::shared_ptr<opp::process> pr) : process(pr){
-      // print_backtrace();
+      msg = fmt::format(
+        "Receive on wrong process. Only currently executing process can call receive. (receive at {}, should have been at {})",
+        process->to_string(), self()->to_string()
+      );
     };
-    const char *what() const noexcept{
-      return "Receive on wrong process. Only currently executing process can call receive.";
-    }
   };
 
   class bad_cast : public opp::exception {
