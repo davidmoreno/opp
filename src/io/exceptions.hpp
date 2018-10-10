@@ -18,4 +18,9 @@ namespace opp::io{
   public:
     read_error() : exception("read error"){}
   };
+
+  class eof : public exception{
+  public:
+    eof() : exception("eof"){}
+  };
 }

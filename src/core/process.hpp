@@ -78,6 +78,11 @@ namespace opp {
     std::string to_string(){
       return fmt::format("[#{} {}]", pid(), name());
     }
+
+    /// Set to true to do not show any exception data at exit, just exit.
+    struct{
+      bool silent_exception_exit = false;
+    } flags;
   private:
     void maybe_exit_or_timeout(std::list<std::any>::iterator &);
     void maybe_exit_or_timeout(const std::any &);

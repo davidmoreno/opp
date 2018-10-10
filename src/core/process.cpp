@@ -68,14 +68,20 @@ namespace opp{
       }
       // fprintf(stderr, "%s: End Excp\n", this->name().c_str());
     } catch (opp::exception &e){
-      fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
-      e.print_backtrace(this->name());
+      if (!flags.silent_exception_exit){
+        fprintf(stderr, "\n%s: Exit process. OPP Exception: %s.\n", this->name().c_str(), e.what());
+        e.print_backtrace(this->name());
+      }
     } catch (std::exception &e){
-      fprintf(stderr, "\n%s: Exit process. C++ Exception: %s.\n", this->name().c_str(), e.what());
-      print_backtrace(this->name());
+      if (!flags.silent_exception_exit){
+        fprintf(stderr, "\n%s: Exit process. C++ Exception: %s.\n", this->name().c_str(), e.what());
+        print_backtrace(this->name());
+      }
     } catch (...) {
-      fprintf(stderr, "\n%s: Exit process. Unknown exception.\n", this->name().c_str());
-      print_backtrace(this->name());
+      if (!flags.silent_exception_exit){
+        fprintf(stderr, "\n%s: Exit process. Unknown exception.\n", this->name().c_str());
+        print_backtrace(this->name());
+      }
     }
     _inloop = false;
 

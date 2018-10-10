@@ -17,6 +17,7 @@ namespace opp::io{
   struct close_msg{};
   struct read_result_msg{ reference ref; };
   struct write_result_msg{ reference ref; };
+  struct eof_msg{ reference ref; };
 
   std::shared_ptr<file> stdin;
   std::shared_ptr<file> stdout;
@@ -68,9 +69,15 @@ namespace opp::io{
   void file::read(buffer_t &data){
     auto ref = make_reference();
     send(read_msg{ref, data, self()});
-    self()->receive({
-      match_ref<read_result_msg>(ref)
+    auto res = self()->receive({
+      match_ref<read_result_msg>(ref),
+      match_ref<eof_msg>(ref),
     });
+
+    if (res.type() == typeid(eof_msg)){
+      throw opp::io::eof();
+    }
+    // Elseit is the answer at data
   }
 
   bool file::eof(){
@@ -125,8 +132,12 @@ namespace opp::io{
     auto read = [this](read_msg msg){
       poller->wait_read(fd);
       auto res = ::read(fd, msg.data.data(), msg.data.capacity());
+      if (res==0){
+        msg.from->send(eof_msg{msg.ref});
+        close();
+      }
       if (res<0){
-        throw opp::io::write_error();
+        throw opp::io::read_error();
       }
       msg.data.set_size(res);
       msg.from->send(read_result_msg{msg.ref});
