@@ -9,6 +9,7 @@
 
 #include "client.hpp"
 #include "../../logger.hpp"
+#include "../exceptions.hpp"
 
 using namespace opp;
 

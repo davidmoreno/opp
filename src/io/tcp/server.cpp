@@ -8,6 +8,7 @@
 #include "logger.hpp"
 #include "server.hpp"
 #include "peer.hpp"
+#include "io/exceptions.hpp"
 
 struct wait_peer_msg{ opp::reference ref; std::shared_ptr<opp::process> from; };
 struct peer_msg{ opp::reference ref; std::shared_ptr<opp::io::tcp::peer> peer; };
