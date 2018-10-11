@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include "exceptions.hpp"
 
 namespace opp::io{
   class buffer_t{
