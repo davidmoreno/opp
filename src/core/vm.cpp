@@ -18,6 +18,8 @@
 #define OPP_WORKER_THREADS 4
 
 namespace opp{
+  thread_local uint32_t tid;
+
   class main_process : public process{
   public:
     main_process() : process("main"){};
@@ -44,15 +46,20 @@ namespace opp{
 
     thread_barrier barrier(nworkers);
     boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >(nworkers, true);
-    for (uint i=0; i<nworkers-1; ++i){
+    tid = 0;
+    for (uint32_t i=0; i<nworkers-1; ++i){
       workers.emplace_back([this, &barrier, i](){
-        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing>(nworkers, true);
+        tid = i+1;
+        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >(nworkers, true);
         barrier.wait();
 
+        // this is what makes all the other fibers to run, and this thread to wait.
         std::unique_lock<std::mutex> lk(running_mutex);
-        // this is what makes all the other fibers to run, or this thread to wait.
-        running_cond.wait( lk, [this](){ return !this->_running; } );
-        // fprintf(stderr, "EOT %d\n", i);
+        running_cond.wait( lk, [this](){
+          fmt::print(stderr, "{} Im ready? {}\n", tid, !this->_running);
+          return !this->_running;
+        });
+        fprintf(stderr, "EOT %d\n", tid);
       });
     }
     barrier.wait();

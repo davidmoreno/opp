@@ -7,6 +7,7 @@ namespace opp::logger{
 
   struct log_msg{
     std::shared_ptr<opp::process> pid;
+    uint32_t tid;
     const char *filename;
     int lineno;
     LogLevel loglevel;
@@ -57,8 +58,8 @@ namespace opp::logger{
           std::string _name = msg.pid->to_string();
 
           opp::io::stderr->println("{} {}", term::color(
-            fmt::format("{:<24} [{}] [{}:{}]",
-              _name, timestamp, filename, msg.lineno
+            fmt::format("{}.{:<24} [{}] [{}:{}]",
+              msg.tid, _name, timestamp, filename, msg.lineno
             ), color),
             msg.message
           ); //term::color("msg"), term::RED);
@@ -74,7 +75,7 @@ namespace opp::logger{
   }
 
   void logger::log(const char *filename, int lineno, LogLevel loglevel, const std::string &msg){
-    send(log_msg{self(), filename, lineno, loglevel, msg});
+    send(log_msg{self(), opp::tid, filename, lineno, loglevel, msg});
   }
   /// Blocks until this is processed
   void logger::flush(){

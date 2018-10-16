@@ -12,6 +12,10 @@
 #define OPP_ERROR(...) opp::logger::log(__FILE__, __LINE__, opp::logger::ERROR, __VA_ARGS__)
 #define OPP_INFO(...) opp::logger::log(__FILE__, __LINE__, opp::logger::INFO, __VA_ARGS__)
 
+namespace opp{
+  extern thread_local uint32_t tid;
+}
+
 namespace opp::logger{
   class logger;
 
@@ -44,7 +48,7 @@ namespace opp::logger{
     auto str = fmt::format(args...);
     if (!__logger){
       char *filename2 = strdupa(filename);
-      fprintf(::stderr, "%s:%d %s", basename(filename2), lineno, (str + "\n").c_str());
+      fprintf(::stderr, "[%d] %s:%d %s", opp::tid, basename(filename2), lineno, (str + "\n").c_str());
     } else {
       __logger->log(filename, lineno, loglevel, str);
     }
