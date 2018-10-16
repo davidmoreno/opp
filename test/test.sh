@@ -39,6 +39,9 @@ case "$1" in
   "string")
     bin/string_test
     ;;
+  "tasks")
+    bin/tasks
+    ;;
 esac
 
 echo "---"

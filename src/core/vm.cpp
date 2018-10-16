@@ -4,22 +4,17 @@
 #include <sstream>
 #include <pthread.h>
 
-#include <boost/fiber/barrier.hpp>
-#include <boost/fiber/algo/shared_work.hpp>
-#include <boost/fiber/algo/work_stealing.hpp>
 
 #include "vm.hpp"
 #include "process.hpp"
+#include "scheduler.hpp"
 #include "term.hpp"
 #include "../io/file.hpp" // FIXME separation of concerns violation
 #include "../logger.hpp"
-#include "extra/thread_barrier.hpp"
 
 #define OPP_WORKER_THREADS 4
 
 namespace opp{
-  thread_local uint32_t tid;
-
   class main_process : public process{
   public:
     main_process() : process("main"){};
@@ -32,7 +27,7 @@ namespace opp{
 
   std::shared_ptr<opp::VM> vm = nullptr;
 
-  VM::VM() : process("vm"), nworkers(OPP_WORKER_THREADS){
+  VM::VM() : process("vm"){
   }
 
 
@@ -43,27 +38,7 @@ namespace opp{
   void VM::start(){
     this->_running = true;
     /// Real start processing data at fibers
-
-    thread_barrier barrier(nworkers);
-    boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >(nworkers, true);
-    tid = 0;
-    for (uint32_t i=0; i<nworkers-1; ++i){
-      workers.emplace_back([this, &barrier, i](){
-        tid = i+1;
-        boost::fibers::use_scheduling_algorithm< boost::fibers::algo::work_stealing >(nworkers, true);
-        barrier.wait();
-
-        // this is what makes all the other fibers to run, and this thread to wait.
-        std::unique_lock<std::mutex> lk(running_mutex);
-        running_cond.wait( lk, [this](){
-          fmt::print(stderr, "{} Im ready? {}\n", tid, !this->_running);
-          return !this->_running;
-        });
-        fprintf(stderr, "EOT %d\n", tid);
-      });
-    }
-    barrier.wait();
-
+    scheduler = std::make_unique<::opp::scheduler>(OPP_WORKER_THREADS);
     main = std::make_shared<main_process>();
     self(main);
     // pthread_setname_np(pthread_self(), "real-main");
@@ -84,11 +59,7 @@ namespace opp{
       // fprintf(stderr, "%s Waiting for stop %d\n", self()->to_string().c_str(), running());
       boost::this_fiber::sleep_for(std::chrono::seconds(1));
     }
-
-    running_cond.notify_all();
-    for (std::thread & t: workers) { /*< wait for threads to terminate >*/
-      t.join();
-    }
+    scheduler = nullptr; // Stops the scheduler
 
     // fprintf(stderr, "Done stop VM. All threads joined. %ld Proceeses still running.\n", processes.size());
   }
