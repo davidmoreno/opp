@@ -5,6 +5,6 @@
 namespace opp::io::tcp{
   class peer : public file{
   public:
-    peer(int fd) : file("peer", fd) {}
+    peer(int fd) : file(fmt::format("peer {}", fd), fd) {}
   };
 }
