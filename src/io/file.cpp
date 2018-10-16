@@ -135,9 +135,13 @@ namespace opp::io{
       if (res==0){
         msg.from->send(eof_msg{msg.ref});
         close();
+        return;
       }
       if (res<0){
-        throw opp::io::read_error();
+        msg.from->send(eof_msg{msg.ref});
+        close();
+        return;
+        // throw opp::io::read_error();
       }
       msg.data.set_size(res);
       msg.from->send(read_result_msg{msg.ref});
