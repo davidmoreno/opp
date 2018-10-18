@@ -28,6 +28,14 @@ namespace opp {
   using process_t = std::shared_ptr<::opp::process>;
   process_t self();
 
+  // Sends a message to this process
+  void send(process_t, std::any &&msg);
+  // Receives a message. If not for me leave it for later.
+  std::any receive(
+      const std::initializer_list<match_case> cases,
+      const std::chrono::seconds &timeout=std::chrono::seconds(5));
+
+
   struct exit_msg{ process_t process; int code; };
   struct timeout_msg{ process_t process; };
   struct down_msg{ process_t process; };
@@ -67,14 +75,16 @@ namespace opp {
 
     // Sends a message to this process
     void send(std::any &&msg);
+    // Receives a message. If not for me leave it for later.
+    std::any receive(
+        const std::initializer_list<match_case> cases,
+        const std::chrono::seconds &timeout=std::chrono::seconds(5));
+
     void stop(int code=0);
     bool running(){ return _running; }
     void monitor();
     void demonitor();
 
-    std::any receive(
-        const std::initializer_list<match_case> cases,
-        const std::chrono::seconds &timeout=std::chrono::seconds(5));
 
     std::string to_string(){
       return fmt::format("[#{} {}]", pid(), name());

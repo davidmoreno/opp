@@ -5,6 +5,7 @@
 
 namespace opp{
   class process;
+  using process_t = std::shared_ptr<process>;
 
   void start();
   void stop();

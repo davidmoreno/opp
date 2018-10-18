@@ -19,6 +19,19 @@ namespace opp{
     throw opp::not_initialized();
   }
 
+
+  // Sends a message to this process
+  void send(process_t pr, std::any &&msg){
+    send(pr, std::forward<std::any>(msg));
+  }
+  // Receives a message. If not for me leave it for later.
+  std::any receive(
+      const std::initializer_list<match_case> cases,
+      const std::chrono::seconds &timeout){
+    return _self->get()->receive(cases, timeout);
+  }
+
+
   std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
   static std::atomic<long> pidcount = 0;
 
@@ -96,7 +109,7 @@ namespace opp{
     _inloop = false;
 
     for(auto pr: monitored_by){
-      pr->send(down_msg{shared_from_this()});
+      opp::send(pr, down_msg{shared_from_this()});
     }
   }
 
@@ -117,7 +130,7 @@ namespace opp{
   void process::stop(int code){
     // fprintf(stderr, "Stop %s %d\n", to_string().c_str(), code);
     vm->stop(shared_from_this(), code);
-    // vm->send(exit_msg{shared_from_this(), code});
+    // send(vm, exit_msg{shared_from_this(), code});
   }
 
   void process::monitor(){
