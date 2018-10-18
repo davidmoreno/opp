@@ -10,7 +10,7 @@
 #include "peer.hpp"
 #include "io/exceptions.hpp"
 
-struct wait_peer_msg{ opp::reference ref; std::shared_ptr<opp::process> from; };
+struct wait_peer_msg{ opp::reference ref; opp::process_t from; };
 struct peer_msg{ opp::reference ref; std::shared_ptr<opp::io::tcp::peer> peer; };
 
 opp::io::tcp::server::server(std::string address, std::string port) : opp::io::file(address+":"+port, -1){

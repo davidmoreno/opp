@@ -25,11 +25,13 @@ namespace opp {
   class VM;
   class process;
 
-  std::shared_ptr<opp::process> self();
+  using process_t = std::shared_ptr<::opp::process>;
 
-  struct exit_msg{ std::shared_ptr<opp::process> process; int code; };
-  struct timeout_msg{ std::shared_ptr<opp::process> process; };
-  struct down_msg{ std::shared_ptr<opp::process> process; };
+  process_t self();
+
+  struct exit_msg{ process_t process; int code; };
+  struct timeout_msg{ process_t process; };
+  struct down_msg{ process_t process; };
 
   class process : public std::enable_shared_from_this<process>{
     std::string _name;
@@ -46,7 +48,7 @@ namespace opp {
     std::list<std::any> messages;
 
     // These will receive "{DOWN, process}" when process stop running
-    std::set<std::shared_ptr<process>> monitored_by;
+    std::set<process_t> monitored_by;
     friend class opp::VM;
   public:
     static std::chrono::seconds FOREVER;
@@ -99,7 +101,7 @@ namespace opp {
 }
 
 namespace std{
-  inline std::string to_string(const std::shared_ptr<opp::process> &pr){
+  inline std::string to_string(const opp::process_t &pr){
     return pr->to_string();
   }
 }

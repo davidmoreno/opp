@@ -78,7 +78,7 @@ namespace opp{
     // and start again. If no processes left. Stop.
     while(true){
       sleep(1);
-      std::vector<std::shared_ptr<process>> tostop;
+      std::vector<process_t> tostop;
       {
         std::unique_lock<std::mutex> lck(mutex);
         tostop = processes;
@@ -138,26 +138,26 @@ namespace opp{
     }
   }
 
-  std::shared_ptr<process> VM::self(){
-    std::shared_ptr<process> ret = *_self;
+  process_t VM::self(){
+    process_t ret = *_self;
     if (ret){
       return *_self;
     }
     throw opp::not_initialized();
   }
 
-  void VM::self(std::shared_ptr<process> self){
+  void VM::self(process_t self){
     _self.reset(new std::shared_ptr(self));
   }
 
-  void VM::start(std::shared_ptr<process> pr){
+  void VM::start(process_t pr){
     // fprintf(stderr, "Starting %s\n", pr->to_string().c_str());
     std::unique_lock<std::mutex> lck(mutex);
     processes.push_back(pr);
     pr->run();
   }
 
-  void VM::stop(std::shared_ptr<process> pr, int code){
+  void VM::stop(process_t pr, int code){
     // fprintf(stderr, "%s stop process %s %d\n", to_string().c_str(), pr->to_string().c_str(), code);
     if (self() != vm){
       self()->send(exit_msg{pr, code});
@@ -216,7 +216,7 @@ namespace opp{
     if (!running())
       return;
     // std::cerr<<"Dirty "<<processes.size()<<std::endl;
-    processes.erase(std::remove_if(processes.begin(), processes.end(), [](std::shared_ptr<process> &p){
+    processes.erase(std::remove_if(processes.begin(), processes.end(), [](process_t &p){
       if (!p->running()){
         p->fiber.join();
         return true;

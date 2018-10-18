@@ -6,7 +6,7 @@
 #include "exceptions.hpp"
 
 namespace opp{
-  std::shared_ptr<process> self(){
+  process_t self(){
     return vm->self();
   }
 

@@ -6,7 +6,7 @@ namespace opp::logger{
   std::shared_ptr<logger> __logger = nullptr;
 
   struct log_msg{
-    std::shared_ptr<opp::process> pid;
+    process_t pid;
     uint32_t tid;
     const char *filename;
     int lineno;

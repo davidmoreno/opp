@@ -10,10 +10,10 @@
 
 namespace opp::io{
   struct print_msg{ std::string str; };
-  struct readline_msg{ std::shared_ptr<opp::process> from; };
+  struct readline_msg{ process_t from; };
   struct readline_result_msg{ std::string string; };
-  struct read_msg{ reference ref; buffer_t &data; std::shared_ptr<opp::process> from; };
-  struct write_msg{ reference ref; buffer_t &data; std::shared_ptr<opp::process> from; };
+  struct read_msg{ reference ref; buffer_t &data; process_t from; };
+  struct write_msg{ reference ref; buffer_t &data; process_t from; };
   struct close_msg{};
   struct read_result_msg{ reference ref; };
   struct write_result_msg{ reference ref; };

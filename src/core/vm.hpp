@@ -12,9 +12,9 @@
 namespace opp{
   class VM : public opp::process{
     std::mutex mutex;
-    std::vector<std::shared_ptr<opp::process>> processes;
-    std::shared_ptr<opp::process> main;
-    boost::fibers::fiber_specific_ptr<std::shared_ptr<process>> _self;
+    std::vector<process_t> processes;
+    process_t main;
+    boost::fibers::fiber_specific_ptr<process_t> _self;
     std::unique_ptr<opp::scheduler> scheduler;
 
     void real_stop();
@@ -27,11 +27,11 @@ namespace opp{
     void loop();
     void loop_thread();
 
-    std::shared_ptr<process> self();
-    void self(std::shared_ptr<process> pr);
+    process_t self();
+    void self(process_t pr);
 
-    void start(std::shared_ptr<process> pr);
-    void stop(std::shared_ptr<process> pr, int code);
+    void start(process_t pr);
+    void stop(process_t pr, int code);
 
     void print_stats();
     void clean_processes();

@@ -30,8 +30,8 @@ namespace opp{
 
   class process_exception : public opp::exception {
   public:
-    std::shared_ptr<opp::process> process;
-    process_exception(std::shared_ptr<opp::process> pr) : process(pr){
+    process_t process;
+    process_exception(process_t pr) : process(pr){
       msg = fmt::format(
         "Receive on wrong process. Only currently executing process can call receive. (receive at {}, should have been at {})",
         process->to_string(), self()->to_string()
@@ -54,7 +54,7 @@ namespace opp{
 
   class bad_receiver : public opp::process_exception {
   public:
-    bad_receiver(std::shared_ptr<opp::process> pr) : process_exception(pr){
+    bad_receiver(process_t pr) : process_exception(pr){
       // print_backtrace();
       msg = fmt::format("bad receiver. Should be {}", to_string(pr));
     };
@@ -62,7 +62,7 @@ namespace opp{
 
   class process_timeout : public opp::process_exception {
   public:
-    process_timeout(std::shared_ptr<opp::process> pr) : process_exception(pr){
+    process_timeout(process_t pr) : process_exception(pr){
       msg = fmt::format("timeout {}", to_string(pr));
     };
   };
@@ -70,7 +70,7 @@ namespace opp{
   class process_exit : public opp::process_exception {
   public:
     int code; // 0 controlled
-    process_exit(std::shared_ptr<opp::process> pr, int _code) : process_exception(pr), code(_code) {
+    process_exit(process_t pr, int _code) : process_exception(pr), code(_code) {
       if (code!=0){
         fprintf(::stderr, "%s Exit process, code %d\n", pr->to_string().c_str(), _code);
         print_backtrace(pr->to_string());
