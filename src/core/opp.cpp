@@ -6,10 +6,6 @@
 #include "exceptions.hpp"
 
 namespace opp{
-  process_t self(){
-    return vm->self();
-  }
-
   void start(){
     if (vm)
       return;

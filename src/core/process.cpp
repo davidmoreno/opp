@@ -5,10 +5,20 @@
 #include "opp.hpp"
 #include "vm.hpp"
 #include "exceptions.hpp"
+#include <boost/fiber/fss.hpp>
 
 #define OPP_MAX_CHANNEL_SIZE 128
 
 namespace opp{
+  boost::fibers::fiber_specific_ptr<process_t> _self;
+  process_t self(){
+    process_t ret = *_self;
+    if (ret){
+      return *_self;
+    }
+    throw opp::not_initialized();
+  }
+
   std::chrono::seconds process::FOREVER = std::chrono::hours(24*265*100);
   static std::atomic<long> pidcount = 0;
 
@@ -54,7 +64,7 @@ namespace opp{
   }
 
   void process::base_loop(){
-    vm->self(shared_from_this());
+    vm->set_self(shared_from_this());
 
     try{
       // printf("%s: Start\n", this->name().c_str());

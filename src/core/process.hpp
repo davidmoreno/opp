@@ -26,7 +26,6 @@ namespace opp {
   class process;
 
   using process_t = std::shared_ptr<::opp::process>;
-
   process_t self();
 
   struct exit_msg{ process_t process; int code; };

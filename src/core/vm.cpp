@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <sstream>
 #include <pthread.h>
-
+#include <boost/fiber/fss.hpp>
 
 #include "vm.hpp"
 #include "process.hpp"
@@ -15,6 +15,8 @@
 #define OPP_WORKER_THREADS 4
 
 namespace opp{
+  extern boost::fibers::fiber_specific_ptr<process_t> _self;
+
   class main_process : public process{
   public:
     main_process() : process("main"){};
@@ -40,7 +42,7 @@ namespace opp{
     /// Real start processing data at fibers
     scheduler = std::make_unique<::opp::scheduler>(OPP_WORKER_THREADS);
     main = std::make_shared<main_process>();
-    self(main);
+    set_self(main);
     // pthread_setname_np(pthread_self(), "real-main");
 
     // Start some required classes
@@ -138,16 +140,8 @@ namespace opp{
     }
   }
 
-  process_t VM::self(){
-    process_t ret = *_self;
-    if (ret){
-      return *_self;
-    }
-    throw opp::not_initialized();
-  }
-
-  void VM::self(process_t self){
-    _self.reset(new std::shared_ptr(self));
+  void VM::set_self(process_t self){
+    opp::_self.reset(new std::shared_ptr(self));
   }
 
   void VM::start(process_t pr){

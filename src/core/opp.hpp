@@ -8,7 +8,6 @@ namespace opp{
 
   void start();
   void stop();
-  process_t self();
 
   template<typename A, typename... Args>
   std::shared_ptr<A> start(Args&&... args){
