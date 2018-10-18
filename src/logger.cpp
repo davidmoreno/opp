@@ -80,7 +80,7 @@ namespace opp::logger{
   /// Blocks until this is processed
   void logger::flush(){
     send(flush_msg{this});
-    self()->receive({
+    receive({
       match_type<flush_ready_msg>()
     });
   }

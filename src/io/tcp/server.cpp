@@ -66,7 +66,7 @@ void opp::io::tcp::server::loop(){
 std::shared_ptr<opp::io::tcp::peer> opp::io::tcp::server::wait_peer(std::chrono::seconds wait){
   auto ref = opp::make_reference();
   this->send(wait_peer_msg{ref, self()});
-  auto msg = self()->receive({
+  auto msg = receive({
     match_ref<peer_msg>(ref)
   }, wait);
   return std::any_cast<peer_msg>(msg).peer;

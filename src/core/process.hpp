@@ -28,11 +28,9 @@ namespace opp {
   using process_t = std::shared_ptr<::opp::process>;
   process_t self();
 
-  // Sends a message to this process
-  void send(process_t, std::any &&msg);
   // Receives a message. If not for me leave it for later.
   std::any receive(
-      const std::initializer_list<match_case> cases,
+      const std::initializer_list<match_case> &cases,
       const std::chrono::seconds &timeout=std::chrono::seconds(5));
 
 
@@ -76,8 +74,8 @@ namespace opp {
     // Sends a message to this process
     void send(std::any &&msg);
     // Receives a message. If not for me leave it for later.
-    std::any receive(
-        const std::initializer_list<match_case> cases,
+    std::any receive_(
+        const std::initializer_list<match_case> &cases,
         const std::chrono::seconds &timeout=std::chrono::seconds(5));
 
     void stop(int code=0);

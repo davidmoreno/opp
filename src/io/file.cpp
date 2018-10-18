@@ -47,7 +47,7 @@ namespace opp::io{
 
   std::string file::readline(){
     send(readline_msg{opp::self()});
-    auto res = opp::self()->receive({
+    auto res = receive({
       match_type<readline_result_msg>()
     }, process::FOREVER);
     return std::any_cast<readline_result_msg>(res).string;
@@ -61,7 +61,7 @@ namespace opp::io{
   void file::write(buffer_t &data){
     auto ref = make_reference();
     send(write_msg{ref, data, self()});
-    self()->receive({
+    receive({
       match_ref<write_result_msg>(ref)
     });
   }
@@ -69,7 +69,7 @@ namespace opp::io{
   void file::read(buffer_t &data){
     auto ref = make_reference();
     send(read_msg{ref, data, self()});
-    auto res = self()->receive({
+    auto res = ::opp::receive({
       match_ref<read_result_msg>(ref),
       match_ref<eof_msg>(ref),
     });

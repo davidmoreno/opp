@@ -20,15 +20,11 @@ namespace opp{
   }
 
 
-  // Sends a message to this process
-  void send(process_t pr, std::any &&msg){
-    send(pr, std::forward<std::any>(msg));
-  }
   // Receives a message. If not for me leave it for later.
   std::any receive(
-      const std::initializer_list<match_case> cases,
+      const std::initializer_list<match_case> &cases,
       const std::chrono::seconds &timeout){
-    return _self->get()->receive(cases, timeout);
+    return _self->get()->receive_(cases, timeout);
   }
 
 
@@ -109,7 +105,7 @@ namespace opp{
     _inloop = false;
 
     for(auto pr: monitored_by){
-      opp::send(pr, down_msg{shared_from_this()});
+      pr->send(down_msg{shared_from_this()});
     }
   }
 
@@ -141,8 +137,8 @@ namespace opp{
     monitored_by.insert(self());
   }
 
-  std::any process::receive(
-      const std::initializer_list<match_case> cases,
+  std::any process::receive_(
+      const std::initializer_list<match_case> &cases,
       const std::chrono::seconds &timeout){
 
     if (opp::self().get() != this){
