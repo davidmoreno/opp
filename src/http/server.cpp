@@ -17,7 +17,7 @@ opp::http::server::server(std::string address, std::string port) :
 }
 
 void opp::http::server::loop(){
-  OPP_DEBUG("Serving...");
+  OPP_DEBUG("Serving {}", tcp_server->to_string());
 
   while(running()){
     auto peer = tcp_server->wait_peer(opp::process::FOREVER);

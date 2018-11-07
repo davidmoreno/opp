@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unistd.h>
+#include <fcntl.h>
 #include "file.hpp"
 #include "core/opp.hpp"
 #include "logger.hpp"
@@ -13,15 +14,34 @@ namespace opp::io{
   struct readline_msg{ process_t from; };
   struct readline_result_msg{ std::string string; };
   struct read_msg{ reference ref; buffer_t &data; process_t from; };
+  struct read_all_msg{ reference ref; process_t from; };
   struct write_msg{ reference ref; buffer_t &data; process_t from; };
   struct close_msg{};
   struct read_result_msg{ reference ref; };
+  struct read_all_result_msg{ reference ref; buffer_t data; };
   struct write_result_msg{ reference ref; };
   struct eof_msg{ reference ref; };
 
   std::shared_ptr<file> stdin;
   std::shared_ptr<file> stdout;
   std::shared_ptr<file> stderr;
+
+  file::file(std::string name, open_mode_e om) : process(name), filename(std::move(name)){
+    switch(om){
+      case io::read:
+        fd = ::open(filename.c_str(), O_RDONLY);
+        break;
+      case io::write:
+        fd = ::open(filename.c_str(), O_WRONLY);
+        break;
+      case io::readwrite:
+        fd = ::open(filename.c_str(), O_RDWR);
+        break;
+    }
+    if (fd < 0){
+      throw io::exception("Could not open file");
+    }
+  }
 
   file::file(std::string name, int fd) : process(name), filename(std::move(name)), fd(fd){
     if (poller.use_count() == 0){ // Initialize once
@@ -78,6 +98,20 @@ namespace opp::io{
       throw opp::io::eof();
     }
     // Elseit is the answer at data
+  }
+
+  buffer_t file::read(){
+    auto ref = make_reference();
+    send(read_all_msg{ref, self()});
+    auto res = ::opp::receive({
+      match_ref<read_all_result_msg>(ref),
+      match_ref<eof_msg>(ref),
+    });
+
+    if (res.type() == typeid(eof_msg)){
+      throw opp::io::eof();
+    }
+    return std::any_cast<read_all_result_msg>(res).data;
   }
 
   bool file::eof(){
@@ -146,6 +180,23 @@ namespace opp::io{
       msg.data.set_size(res);
       msg.from->send(read_result_msg{msg.ref});
     };
+    auto read_all = [this](read_all_msg msg){
+      // poller->wait_read(fd);
+      char buffer[4096];
+      auto res = ::read(fd, buffer, sizeof(buffer));
+      std::vector<int8_t> data;
+      while (res>0){
+        std::copy(std::begin(buffer), std::begin(buffer)+res, std::back_inserter(data));
+        res = ::read(fd, buffer, sizeof(buffer));
+      }
+      if (res<0){
+        msg.from->send(eof_msg{msg.ref});
+        close();
+        return;
+        // throw opp::io::read_error();
+      }
+      msg.from->send(read_all_result_msg{msg.ref, buffer_t(std::move(data))});
+    };
     auto closef = [this](close_msg c){
       ::close(fd);
       fd = -1;
@@ -164,7 +215,7 @@ namespace opp::io{
     // };
 
     std::initializer_list<match_case> cases = {
-      printfn, readlinefn, write, read, closef
+      printfn, readlinefn, write, read, closef, read_all
     };
 
 

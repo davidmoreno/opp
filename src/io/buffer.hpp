@@ -9,12 +9,31 @@ namespace opp::io{
     std::vector<int8_t> data_;
     int32_t size_;
   public:
+    buffer_t() : data_(0), size_(0){}
     buffer_t(uint32_t capacity) : data_(capacity), size_(0){}
     buffer_t(const std::string &str) : data_(str.size()), size_(str.size()){
       int i=0;
       for(auto c: str){
         data_[i++] = c;
       }
+    }
+    // buffer_t(buffer_t &&o){
+    //   data_ = std::move(o.data_);
+    //   size_ = o.size_;
+    // }
+    buffer_t(std::vector<int8_t> &&o){
+      data_ = std::move(o);
+      size_ = data_.size();
+    }
+    // buffer_t &operator=(buffer_t &&o){
+    //   data_ = std::move(o.data_);
+    //   size_ = o.size_;
+    //   return *this;
+    // }
+    buffer_t &operator=(std::vector<int8_t> &&o){
+      data_ = std::move(o);
+      size_ = data_.size();
+      return *this;
     }
     void set_size(uint32_t size){
       if (size>data_.capacity())
@@ -44,6 +63,11 @@ namespace opp::io{
     }
     const int8_t *end() const{
       return begin()+size_;
+    }
+    buffer_t clone() const{
+      buffer_t res(size_);
+      res.data_ = data_; // this copies the data
+      return res;
     }
   };
 }

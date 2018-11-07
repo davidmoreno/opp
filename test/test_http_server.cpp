@@ -4,11 +4,14 @@
 #include "opp.hpp"
 #include "vm.hpp"
 #include "http/server.hpp"
+#include "observer/observer.hpp"
 #include "string.hpp"
 #include "logger.hpp"
 
 int main(int argc, char **argv){
   opp::start();
+
+  auto observer = opp::start<opp::observer>("../ui/index.html", "127.0.0.1", "4444");
 
   auto server = opp::start<opp::http::server>(argv[1], argv[2]);
 

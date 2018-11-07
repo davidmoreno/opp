@@ -7,12 +7,18 @@
 #include "buffer.hpp"
 
 namespace opp::io{
+  typedef enum{
+    read = 1,
+    write = 2,
+    readwrite = 3,
+  }  open_mode_e;
+
   class file : public opp::process{
     std::string filename;
     int fd;
   public:
     file(std::string filename, int fd);
-    file(std::string filename);
+    file(std::string filename,  open_mode_e om);
     ~file();
     void replace_fd(int fd);
     int get_fd(){ return fd; };
@@ -26,6 +32,7 @@ namespace opp::io{
     void write(const std::string &data);
     void write(buffer_t &data);
     void read(buffer_t &data);
+    buffer_t read();
     bool eof();
 
     void print_(std::string str);

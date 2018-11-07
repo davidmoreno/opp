@@ -5,6 +5,7 @@ add_library(opp SHARED
   poller.cpp logger.cpp task.cpp supervisor.cpp
   io/file.cpp io/tcp/client.cpp io/tcp/server.cpp
   http/server.cpp http/response.cpp http/request.cpp
+  observer/observer.cpp
 )
 
 add_subdirectory(core)

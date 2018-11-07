@@ -90,7 +90,7 @@ void opp::http::response::write_to(std::shared_ptr<opp::io::file> f){
   for (auto &header: headers){
     output <<header.first<<": "<<header.second<<std::endl;
   }
-  output <<std::endl<<content;
+  output <<std::endl<<std::string_view((const char *)content.data(), content.size());
 
   f->write(output.str());
 }
