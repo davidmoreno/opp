@@ -1,5 +1,5 @@
 $topbackground: #e43
-$sidebarbackground: #345
+$sidebarbackground: #0987cb
 $topcolor: white
 $sidebarcolor: white
 
@@ -9,9 +9,12 @@ body
   height: 100vh
   font-family: sans-serif
 
+a
+  text-decoration: none
+
 #chrome
   display: grid
-  grid-template: "topmenu topmenu" "sidebar mainarea"
+  grid-template: "sidebar topmenu" "sidebar mainarea"
   grid-template-columns: 300px auto
   grid-template-rows: 60px auto
   width: 100%
@@ -36,12 +39,26 @@ body
   align-items: stretch
   &.horizontal
     flex-direction: row
+    .item
+      align-self: center
   &.vertical
     flex-direction: column
+    hr
+      width: 100%
+      border: 0
+      margin: 0
+      border-top: 1px solid rgba(255,255,255,0.3);
   .stretch
     flex-grow: 1
   .item
+    color: white
     cursor: pointer
     padding: 15px
     &:hover
       background: rgba(255,255,255, 0.5)
+
+.ui.margin
+  margin: 10px
+
+.ui.padding
+  margin: 10px
